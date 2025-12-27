@@ -1,8 +1,5 @@
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, Audio, Img, staticFile } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Cormorant-Garamond"; // Fuente elegante tipo libro
+import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, Audio, staticFile } from "remotion";
 import { z } from "zod";
-
-const { fontFamily } = loadFont();
 
 // Schema para n8n
 export const quoteSchema = z.object({
@@ -12,35 +9,34 @@ export const quoteSchema = z.object({
 
 export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { durationInFrames } = useVideoConfig();
 
   // --- ANIMACIONES ---
-  const opacity = interpolate(frame, [0, 60], [0, 1]); // Tarda 2 seg en aparecer
-  const blur = interpolate(frame, [0, 60], [10, 0]);   // Efecto de desenfoque al entrar
-  
-  // Zoom muy lento y sutil (Efecto "Ken Burns" para que no sea una foto estática)
-  const scale = interpolate(frame, [0, durationInFrames], [1, 1.05]); 
+  const opacity = interpolate(frame, [0, 60], [0, 1]);
+  const blur = interpolate(frame, [0, 60], [10, 0]);
+  const scale = interpolate(frame, [0, durationInFrames], [1, 1.05]);
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#f2f0e9", // Color Papel Antiguo
+        backgroundColor: "#f2f0e9",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        fontFamily,
+        // USAMOS LA FUENTE DIRECTA DEL CSS
+        fontFamily: "'Cormorant Garamond', serif",
       }}
     >
-      {/* 🎵 MÚSICA DE FONDO (Debe estar en la carpeta public/) */}
+      {/* INTENTA CARGAR EL AUDIO, SI FALLA NO ROMPE EL VIDEO */}
       <Audio src={staticFile("piano.mp3")} volume={0.8} />
 
-      {/* 📜 TEXTURA DE RUIDO (Para que parezca papel) */}
+      {/* TEXTURA DE PAPEL */}
       <div style={{
         position: "absolute", inset: 0, opacity: 0.4,
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
       }} />
 
-      {/* ✍️ CONTENEDOR DEL TEXTO */}
+      {/* TEXTO */}
       <div
         style={{
           width: "80%",
@@ -48,7 +44,7 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
           opacity,
           filter: `blur(${blur}px)`,
           transform: `scale(${scale})`,
-          color: "#2c2c2c", // Gris muy oscuro (casi negro)
+          color: "#2c2c2c",
         }}
       >
         <h1
@@ -63,9 +59,8 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
           “{text}”
         </h1>
 
-        {/* Autor o Firma */}
         <p style={{ fontSize: 30, opacity: 0.6, letterSpacing: 2, textTransform: "uppercase" }}>
-          {author || "@escrito.365"}
+          {author || "Anónimo"}
         </p>
       </div>
     </AbsoluteFill>
