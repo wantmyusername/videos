@@ -9,7 +9,6 @@ export const quoteSchema = z.object({
 export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author }) => {
   const frame = useCurrentFrame();
 
-  // Movimiento sutil (Handheld)
   const shakeX = (Math.sin(frame / 55) * 1.5);
   const shakeY = (Math.cos(frame / 85) * 1.5);
   const scale = 1.02 + Math.sin(frame / 300) * 0.005;
@@ -30,22 +29,16 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
 
-        {/* --- CONTENEDOR DE TEXTO --- */}
         <div
           style={{
             position: "absolute",
+            top: "43%",
+            left: "21%",
+            width: "65%",
 
-            // AJUSTE 1: Bajamos un poco más
-            top: "42%",
-
-            // AJUSTE 2: Empujamos fuerte a la derecha para salir de la sombra del libro
-            left: "22%",
-
-            // AJUSTE 3: Hacemos la caja más angosta para que el poema se vea compacto
-            width: "60%",
-
-            // Rotación sutil
-            transform: "rotate(-3.5deg)",
+            // --- AJUSTE FINAL DE ROTACIÓN ---
+            // El ángulo es más suave para que coincida con el libro
+            transform: "rotate(-2.5deg)",
 
             display: "flex",
             flexDirection: "column",
@@ -55,18 +48,13 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
         >
           <p
             style={{
-              // Subimos un poco el tamaño para compensar que la caja es más chica
               fontSize: 48,
               lineHeight: 1.5,
-
               color: "#1a1a1a",
               fontWeight: 400,
-
-              // Efectos de realismo
               mixBlendMode: "multiply",
               opacity: 0.9,
               filter: "blur(0.5px)",
-
               textAlign: "left",
               margin: 0,
             }}
@@ -81,7 +69,7 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
                 marginTop: 30,
                 fontWeight: 400,
                 alignSelf: "flex-end",
-                marginRight: "5%", // Margen derecho interno de la firma
+                marginRight: "5%",
                 fontStyle: "italic",
                 opacity: 0.7,
                 mixBlendMode: "multiply",
@@ -93,7 +81,6 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
         </div>
       </AbsoluteFill>
 
-      {/* Noise sutil */}
       <div style={{
             position: "absolute", inset: 0, opacity: 0.05, pointerEvents: "none",
             mixBlendMode: "overlay",
