@@ -8,6 +8,7 @@
   "dependencies": {
     "@remotion/bundler": "^4.0.395",
     "@remotion/cli": "4.0.395",
+    "@remotion/google-fonts": "^4.0.395",
     "@remotion/renderer": "^4.0.395",
     "@remotion/zod-types": "4.0.395",
     "body-parser": "^2.2.1",
