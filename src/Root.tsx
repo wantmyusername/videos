@@ -1,28 +1,22 @@
+import React from 'react';
 import { Composition } from "remotion";
-// 👇 AQUÍ ESTABA EL ERROR. Ahora importamos desde el archivo nuevo:
-import { DataVersus, myCompSchema } from "./DataVersus";
+import { QuoteVideo, quoteSchema } from "./QuoteVideo";
+import "./style.css"; // (Opcional, si tienes estilos)
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        id="DataVersus"
-        component={DataVersus}
-        durationInFrames={300}
+        id="QuoteVideo"
+        component={QuoteVideo}
+        durationInFrames={360}
         fps={30}
         width={1080}
         height={1920}
-        schema={myCompSchema}
+        schema={quoteSchema}
         defaultProps={{
-          title: "Demo Mode",
-          subtitle: "Esperando a OpenAI...",
-          topic: "demo",
-          data: [{
-            name: "Loading...",
-            flag: "⏳",
-            color: "#fff",
-            values: [{year: 2024, value: 100}]
-          }]
+          text: "El éxito es ir de fracaso en fracaso sin perder el entusiasmo.",
+          author: "Winston Churchill"
         }}
       />
     </>
