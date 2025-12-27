@@ -24,7 +24,7 @@ WORKDIR /app
 # Copiar manifests primero (cache friendly)
 COPY package*.json ./
 
-RUN npm ci --legacy-peer-deps
+RUN RUN npm install --legacy-peer-deps
 
 # Copiar el resto del código
 COPY . .
