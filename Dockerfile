@@ -1,6 +1,8 @@
 FROM node:18-bullseye
 
-# Instalar librerías necesarias para Chromium / Remotion
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Dependencias de Chromium
 RUN apt-get update && apt-get install -y \
     chromium \
     libnss3 \
@@ -19,17 +21,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
+# Copiar manifests primero (cache friendly)
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+RUN npm ci --legacy-peer-deps
 
 # Copiar el resto del código
 COPY . .
 
-# Exponer el puerto
-EXPOSE 8000
-
-# Comando para iniciar el servidor
-CMD ["npx", "tsx", "server.ts"]
+CMD ["npm", "start"]
