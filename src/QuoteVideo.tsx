@@ -32,13 +32,13 @@ export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author
         <div
           style={{
             position: "absolute",
-            top: "42%",
-            left: "22%",
-            width: "60%",
+            top: "43%",
+            left: "21%",
+            width: "65%",
 
-            // --- AJUSTE: 2 GRADOS POSITIVOS ---
-            // Inclinación sutil hacia abajo-derecha para seguir el borde
-            transform: "rotate(2deg)",
+            // --- AJUSTE FINAL DE ROTACIÓN ---
+            // El ángulo es más suave para que coincida con el libro
+            transform: "rotate(-1.5deg)",
 
             display: "flex",
             flexDirection: "column",
