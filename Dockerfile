@@ -1,6 +1,6 @@
 FROM node:18-bullseye
 
-# Instalar librerías necesarias para Chrome (Remotion lo necesita)
+# Instalar librerías necesarias para Chromium / Remotion
 RUN apt-get update && apt-get install -y \
     chromium \
     libnss3 \
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxfixes3 \
-    librandr2 \
+    libxrandr2 \
     libgbm1 \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
