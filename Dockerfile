@@ -1,7 +1,6 @@
 FROM node:18-bullseye
 
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-
+# Instalar Chrome y dependencias
 RUN apt-get update && apt-get install -y \
     chromium \
     libnss3 \
@@ -13,16 +12,21 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxfixes3 \
-    libxrandr2 \
+    librandr2 \
     libgbm1 \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
-
+# 1. Copiamos TODO el proyecto primero (incluyendo package.json)
 COPY . .
 
-CMD ["npm", "start"]
+# 2. Ahora sí instalamos (usamos legacy-peer-deps para evitar conflictos)
+RUN npm install --legacy-peer-deps
+
+# Exponemos puerto
+EXPOSE 8000
+
+# Arrancamos
+CMD ["npx", "tsx", "server.ts"]
