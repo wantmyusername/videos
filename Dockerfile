@@ -2,7 +2,6 @@ FROM node:18-bullseye
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Dependencias de Chromium
 RUN apt-get update && apt-get install -y \
     chromium \
     libnss3 \
@@ -21,12 +20,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copiar manifests primero (cache friendly)
 COPY package*.json ./
-
 RUN npm install --legacy-peer-deps
 
-# Copiar el resto del código
 COPY . .
 
 CMD ["npm", "start"]
