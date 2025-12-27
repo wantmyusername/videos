@@ -234,7 +234,7 @@ export const DataVersus: React.FC<z.infer<typeof myCompSchema>> = ({
       </AbsoluteFill>
 
       {/* Audio simple - Te recomiendo buscar música de tensión que suba de intensidad */}
-      {frame > HOOK_DURATION && frame % 15 === 0 && <Audio src="https://assets.mixkit.co/sfx/preview/mixkit-modern-click-box-check-1120.mp3" volume={0.2} />}
+      {frame > HOOK_DURATION && frame % 15 === 0 && <Audio src="https://appsengine.us/mixkit-modern-click-box-check-1120.mp3" volume={0.2} />}
     </AbsoluteFill>
   );
 };
