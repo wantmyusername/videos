@@ -1,5 +1,6 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, Audio, staticFile, Img, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, Audio, staticFile, Img } from "remotion";
 import { z } from "zod";
+import { useMemo } from "react";
 
 export const quoteSchema = z.object({
   text: z.string(),
@@ -8,108 +9,111 @@ export const quoteSchema = z.object({
 
 export const QuoteVideo: React.FC<z.infer<typeof quoteSchema>> = ({ text, author }) => {
   const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
 
-  // --- 1. MOVIMIENTO DE CÁMARA REALISTA (HANDHELD) ---
-  // Usamos números primos (53, 71, etc.) para evitar patrones repetitivos (el "ocho").
-  // La amplitud es MUY baja (2 o 3 pixeles), solo vibración natural.
+  // --- 1. MOVIMIENTO DE CÁMARA (Sutil y orgánico) ---
+  // Reducido al mínimo para que no maree, solo "respira"
+  const shakeX = (Math.sin(frame / 60) * 1.5);
+  const shakeY = (Math.cos(frame / 80) * 1.5);
+  const scale = 1.02 + Math.sin(frame / 250) * 0.005; // Zoom casi imperceptible
 
-  const shakeX = (Math.sin(frame / 53) * 2) + (Math.cos(frame / 127) * 2);
-  const shakeY = (Math.cos(frame / 71) * 2) + (Math.sin(frame / 43) * 2);
-  const rotate = Math.sin(frame / 200) * 0.5; // Rotación casi imperceptible
-
-  // Un "Breathing" (respiración) del zoom muy lento
-  const scale = 1.08 + Math.sin(frame / 300) * 0.01;
+  // --- 2. NÚMERO DE CAPÍTULO ALEATORIO ---
+  // Generamos un número romano random (ej. "XV", "XXII") para darle realismo
+  const chapter = useMemo(() => {
+    const romans = ["IX", "XI", "XVII", "XXII", "XXV", "XVIII", "XXX"];
+    return romans[Math.floor(Math.random() * romans.length)];
+  }, []);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       <Audio src={staticFile("piano.mp3")} volume={0.8} />
 
-      {/* CONTENEDOR QUE MUEVE TODO JUNTO (FOTO + TEXTO) */}
       <AbsoluteFill
         style={{
-          transform: `translate(${shakeX}px, ${shakeY}px) rotate(${rotate}deg) scale(${scale})`,
-          width: "100%",
-          height: "100%",
-          // Importante: Centramos el punto de transformación para que el zoom sea desde el centro
+          transform: `translate(${shakeX}px, ${shakeY}px) scale(${scale})`,
+          width: "100%", height: "100%",
           transformOrigin: "center center",
         }}
       >
-        {/* FONDO */}
+        {/* FONDO (Tu foto del libro) */}
         <Img
           src={staticFile("background.jpg")}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
 
-        {/* --- 2. POSICIONAMIENTO DEL TEXTO --- */}
+        {/* --- 3. CONTENEDOR DE TEXTO (Rotado para seguir la hoja) --- */}
         <div
           style={{
             position: "absolute",
-            inset: 0,
+            top: "22%",  // Altura donde empieza el texto en tu foto
+            left: "18%", // Margen izquierdo grande (es página derecha)
+            width: "65%", // El texto no ocupa todo el ancho
+
+            // ROTACIÓN CLAVE: Inclinamos el texto para que siga la línea del libro
+            transform: "rotate(-6deg)",
+
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center", // Verticalmente centrado
-
-            // MÁRGENES FÍSICOS DEL LIBRO (Ajustados a tu foto)
-            // Empujamos el texto a la derecha para evitar el lomo y la sombra curva
-            paddingLeft: "15%",  // Evita el lomo izquierdo
-            paddingRight: "10%", // Margen derecho
-            paddingTop: "20%",   // Evita la parte borrosa de arriba
-
-            fontFamily: "'Special Elite', cursive",
+            alignItems: "flex-start", // Alineado a la izquierda como en el libro
+            fontFamily: "'EB Garamond', serif",
           }}
         >
+          {/* NÚMERO DE CAPÍTULO (Ej: XXII) */}
+          <div style={{
+            width: "100%",
+            textAlign: "center", // El número sí va centrado respecto al bloque de texto
+            fontSize: 32,
+            color: "#1a1a1a",
+            marginBottom: 50, // Espacio entre número y poema
+            opacity: 0.8,
+            mixBlendMode: "multiply",
+            letterSpacing: 2,
+            fontWeight: 500,
+            filter: "blur(0.4px)",
+          }}>
+            {chapter}
+          </div>
+
+          {/* EL POEMA / TEXTO */}
           <h1
             style={{
-              fontSize: 52,
-              lineHeight: 1.4,
-              color: "#222", // Negro suave
-              marginBottom: 40,
-              textAlign: "left", // Los libros suelen alinearse a la izquierda
+              fontSize: 42, // Tamaño realista de lectura
+              lineHeight: 1.5, // Espaciado cómodo
+              color: "#050505", // Tinta casi negra
 
-              // --- 3. INTEGRACIÓN CON EL PAPEL ---
-              mixBlendMode: "multiply", // Fusión
-              opacity: 0.85,
+              // Realismo de impresión:
+              mixBlendMode: "multiply",
+              opacity: 0.9,
+              filter: "blur(0.5px)", // Suavizado para que no parezca digital
 
-              // Desenfoque para igualar la calidad de la foto de fondo (CRUCIAL)
-              filter: "blur(0.6px)",
-
-              // Rotación muy leve para que no se vea "pegado con paint"
-              transform: "rotate(-1.5deg)",
+              textAlign: "left",
             }}
           >
             {text}
           </h1>
 
-          <p style={{
-              fontSize: 26,
-              color: "#555",
-              marginTop: 10,
-              alignSelf: "flex-end", // Firma a la derecha
-              marginRight: 20,
-
-              mixBlendMode: "multiply",
-              opacity: 0.7,
-              filter: "blur(0.5px)",
-              transform: "rotate(-1deg)",
-              fontFamily: "Courier New, monospace"
-          }}>
-            — {author || "Anónimo"}
-          </p>
+          {/* FIRMA (Pequeña y sutil, opcional) */}
+          {author && (
+            <p style={{
+                fontSize: 20,
+                color: "#444",
+                marginTop: 30,
+                alignSelf: "flex-end", // A la derecha del bloque
+                fontStyle: "italic",
+                opacity: 0.6,
+                mixBlendMode: "multiply",
+            }}>
+              — {author}
+            </p>
+          )}
         </div>
       </AbsoluteFill>
 
-      {/* VIGNETTE (Sombra en las esquinas para centrar atención) */}
+      {/* RUIDO DEL PAPEL (Textura extra para unificar) */}
       <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: "radial-gradient(circle, transparent 40%, rgba(0,0,0,0.4) 100%)",
-          zIndex: 10
+            position: "absolute", inset: 0, opacity: 0.08, pointerEvents: "none",
+            mixBlendMode: "overlay",
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
       }}/>
-
     </AbsoluteFill>
   );
 };
