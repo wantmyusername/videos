@@ -122,9 +122,6 @@ export const MUSIC_ASSETS = [
   "music_00003.mp3",
   "music_00004.mp3",
   "music_00005.mp3",
-  "music_00006.mp3",
   "music_00007.mp3",
-  "music_00008.mp3",
-  "music_00009.mp3",
   "music_00010.mp3"
 ];
