@@ -1,4 +1,4 @@
-import { AbsoluteFill, Video, Audio, staticFile, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Video, Audio, staticFile } from "remotion";
 import { z } from "zod";
 
 // Schema de datos que recibe
@@ -12,12 +12,8 @@ export const cinematicSchema = z.object({
 export const CinematicQuote: React.FC<z.infer<typeof cinematicSchema>> = ({
   text, author, videoFile, musicFile
 }) => {
-  const frame = useCurrentFrame();
 
-  // Animación: Aparición suave (Fade In)
-  const opacity = interpolate(frame, [0, 20], [0, 1]);
-  // Un movimiento imperceptible hacia arriba para darle elegancia
-  const moveUp = interpolate(frame, [0, 40], [10, 0]);
+  // Ya no necesitamos 'frame' ni 'interpolate' porque será estático
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
@@ -28,47 +24,43 @@ export const CinematicQuote: React.FC<z.infer<typeof cinematicSchema>> = ({
         style={{
           width: "100%",
           height: "100%",
-          objectFit: "cover" // Se adapta a pantalla completa sin bordes negros
+          objectFit: "cover"
         }}
-        muted // Muteamos el audio original del video por si acaso
-        loop // Por si el video es más corto que la frase
+        muted
+        loop
       />
 
-      {/* 2. CAPA OSCURA (Vignette) - Vital para que el texto blanco resalte */}
+      {/* 2. CAPA OSCURA (Vignette) */}
       <div style={{
         position: "absolute", inset: 0,
-        background: "rgba(0,0,0,0.3)" // 30% de oscuridad general para contraste
+        background: "rgba(0,0,0,0.3)"
       }} />
 
       {/* 3. MÚSICA DE PIANO */}
       <Audio src={staticFile(`music/${musicFile}`)} volume={0.8} />
 
-      {/* 4. TEXTO Y AUTOR */}
+      {/* 4. TEXTO Y AUTOR (ESTÁTICO) */}
       <div style={{
         position: "absolute", inset: 0,
         display: "flex", flexDirection: "column",
         justifyContent: "center", alignItems: "center",
-        padding: "50px", // Margen para que no toque los bordes
+        padding: "50px",
         fontFamily: "'EB Garamond', serif",
-        opacity,
-        transform: `translateY(${moveUp}px)`
+        // Sin opacidad ni transformaciones, 100% visible siempre
       }}>
 
-        {/* LA FRASE */}
+        {/* LA FRASE (Sin comillas) */}
         <h1 style={{
           color: "#ffffff",
-          fontSize: 55, // Tamaño grande y legible
+          fontSize: 55,
           textAlign: "center",
           lineHeight: 1.3,
-          fontWeight: 600, // Un poco más grueso (Semi-bold) para video
-
-          // EL SECRETO DE LA LEGIBILIDAD (Sombra fuerte estilo TikTok/Cine)
+          fontWeight: 600,
           textShadow: "0px 2px 10px rgba(0,0,0,0.9), 0px 0px 20px rgba(0,0,0,0.5)",
-
           margin: 0,
           marginBottom: 30
         }}>
-          "{text}"
+          {text}
         </h1>
 
         {/* EL AUTOR */}
