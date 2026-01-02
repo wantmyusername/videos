@@ -1,6 +1,6 @@
 /**
  * server.ts
- * Servidor corregido para Quotes
+ * Servidor Híbrido: Libro vs. Cinemático
  */
 import express from "express";
 import { bundle } from "@remotion/bundler";
@@ -9,26 +9,59 @@ import path from "path";
 import fs from "fs";
 import os from "os";
 
-// 1. INICIALIZAR APP PRIMERO (Esto faltaba o estaba mal ubicado)
+// Importamos el inventario de assets (Asegúrate de haber creado src/assets.ts)
+// Nota: Usamos require o import dinámico si ts-node se queja, pero esto debería funcionar en tu setup actual.
+import { VIDEO_ASSETS, MUSIC_ASSETS } from "./src/assets";
+
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 8000;
 
-// Caché del bundle
 let bundledPath: string | null = null;
 
-// 2. DEFINIR RUTA
 app.post("/render", async (req, res) => {
   try {
     const inputProps = req.body;
-    console.log("📜 Recibiendo petición de frase...");
+    console.log(`🎬 Petición recibida: ${inputProps.text?.substring(0, 20)}...`);
 
-    // Configuración para Video de Frases (12 segundos)
     const FPS = 30;
-    const durationInFrames = 12 * FPS;
 
-    // Bundlear si no existe
+    // --- LÓGICA DE DECISIÓN (50% Libro / 50% Cine) ---
+    const isCinematic = Math.random() > 0.5;
+
+    let compositionId = "QuoteVideo"; // Por defecto: Libro
+    let durationInFrames = 12 * FPS;  // Por defecto: 12 segs
+    let finalProps = { ...inputProps }; // Copia de props
+
+    if (isCinematic) {
+      console.log("🌊 Modo: CINEMÁTICO");
+      compositionId = "CinematicQuote";
+
+      // 1. Elegir Video al Azar
+      const randomVideo = VIDEO_ASSETS[Math.floor(Math.random() * VIDEO_ASSETS.length)];
+
+      // 2. Elegir Música al Azar
+      const randomMusic = MUSIC_ASSETS[Math.floor(Math.random() * MUSIC_ASSETS.length)];
+
+      // 3. Ajustar Duración a la del video (para que no se corte ni quede negro)
+      // Si no hay duración definida, usamos 15s por seguridad
+      const videoDuration = randomVideo.durationInSeconds || 15;
+      durationInFrames = Math.floor(videoDuration * FPS);
+
+      // 4. Inyectar los nombres de archivo a las props
+      finalProps = {
+        ...inputProps,
+        videoFile: randomVideo.file,
+        musicFile: randomMusic
+      };
+
+    } else {
+      console.log("📖 Modo: LIBRO CLÁSICO");
+      // El modo libro usa la duración fija de 12s y los defaults de QuoteVideo
+    }
+
+    // --- BUNDLE (Solo una vez) ---
     if (!bundledPath) {
       console.log("📦 Empaquetando...");
       bundledPath = await bundle({
@@ -36,23 +69,26 @@ app.post("/render", async (req, res) => {
       });
     }
 
-    // Seleccionar composición
+    // --- SELECCIÓN ---
     const composition = await selectComposition({
       serveUrl: bundledPath,
-      id: "QuoteVideo", // ID del componente de Frases
-      inputProps,
+      id: compositionId, // ID Dinámico (QuoteVideo o CinematicQuote)
+      inputProps: finalProps, // Props con video/musica inyectados
     });
 
-    const tempOutput = path.join(os.tmpdir(), `quote-${Date.now()}.mp4`);
+    // --- RENDER ---
+    const tempOutput = path.join(os.tmpdir(), `video-${Date.now()}.mp4`);
 
-    console.log("⚙️ Renderizando...");
+    console.log(`⚙️ Renderizando ${compositionId} (${durationInFrames} frames)...`);
+
     await renderMedia({
       composition,
       serveUrl: bundledPath,
       codec: "h264",
       outputLocation: tempOutput,
-      inputProps,
-      durationInFrames, // Duración forzada
+      inputProps: finalProps,
+      durationInFrames: durationInFrames, // Duración dinámica
+      fps: FPS,
     });
 
     console.log("✅ Listo. Enviando...");
@@ -62,17 +98,16 @@ app.post("/render", async (req, res) => {
       try {
         if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
       } catch (e) {
-        console.error("Error borrando temp:", e);
+        console.error("Error limpieza:", e);
       }
     });
 
   } catch (err) {
-    console.error("🔥 Error:", err);
+    console.error("🔥 Error Fatal:", err);
     res.status(500).json({ error: (err as Error).message });
   }
 });
 
-// 3. ARRANCAR SERVIDOR
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor listo en puerto ${PORT}`);
+  console.log(`🚀 Servidor Híbrido listo en puerto ${PORT}`);
 });
