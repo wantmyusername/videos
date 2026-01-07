@@ -28,7 +28,7 @@ app.post("/render", async (req, res) => {
     const FPS = 30;
 
     // --- LÓGICA DE DECISIÓN (50% Libro / 50% Cine) ---
-    const isCinematic = Math.random() > 0.8;
+    const isCinematic = Math.random() > 0.1;
 
     let compositionId = "QuoteVideo"; // Por defecto: Libro
     let durationInFrames = 12 * FPS;  // Por defecto: 12 segs
