@@ -7,11 +7,10 @@ import "./style.css";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* 1. MODO LIBRO (Tu canal principal) */}
       <Composition
         id="QuoteVideo"
         component={QuoteVideo}
-        durationInFrames={360} // 12 segundos fijo
+        durationInFrames={360}
         fps={30}
         width={1080}
         height={1920}
@@ -22,18 +21,17 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
 
-      {/* 2. MODO VIEJO PAULINO (Tu nuevo canal viral) */}
       <Composition
         id="ViejoPaulino"
         component={ViejoPaulino}
-        durationInFrames={300} // Se calcula dinámicamente según el audio
+        durationInFrames={300}
         fps={30}
         width={1080}
         height={1920}
         schema={paulinoSchema}
         defaultProps={{
-          audioData: "",
-          videoFile: "video_002.mp4", // Asegúrate de tener videos en public/asmr
+          audioUrl: "", // <--- Ahora usamos URL
+          videoFile: "video_002.mp4",
           captions: [
             { word: "Prueba", start: 0, end: 1 }
           ]

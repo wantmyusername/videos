@@ -5,7 +5,7 @@ import { z } from "zod";
 const { fontFamily } = loadFont();
 
 export const paulinoSchema = z.object({
-  audioData: z.string(),
+  audioUrl: z.string(), // <--- CAMBIO: Recibe URL, no string gigante
   videoFile: z.string(),
   captions: z.array(z.object({
     word: z.string(),
@@ -15,10 +15,10 @@ export const paulinoSchema = z.object({
 });
 
 export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
-  audioData, videoFile, captions
+  audioUrl, videoFile, captions
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig(); // Obtenemos la duración total calculada por el server
+  const { fps, durationInFrames } = useVideoConfig();
 
   // 1. Lógica de Subtítulos
   const currentTime = frame / fps;
@@ -34,13 +34,10 @@ export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
 
-      {/*
-          LA TIJERA MAESTRA ✂️
-          Todo lo que esté aquí dentro se cortará exactamente en el frame final.
-      */}
+      {/* TIJERA DE TIEMPO EXACTO */}
       <Sequence from={0} durationInFrames={durationInFrames}>
 
-          {/* VIDEO DE FONDO */}
+          {/* VIDEO FONDO */}
           <Video
             src={staticFile(`asmr/${videoFile}`)}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -48,15 +45,15 @@ export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
             volume={0.2}
           />
 
-          {/* CAPA DE CONTRASTE */}
+          {/* CAPA OSCURA */}
           <div style={{
             position: "absolute",
             bottom: 0, left: 0, right: 0, height: "50%",
             background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)"
           }} />
 
-          {/* AUDIO VOZ */}
-          <Audio src={audioData} volume={1.0} />
+          {/* AUDIO DESDE ARCHIVO LOCAL (Carga instantánea) */}
+          <Audio src={audioUrl} volume={1.0} />
 
           {/* SUBTÍTULOS */}
           <div style={{
