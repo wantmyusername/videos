@@ -28,7 +28,7 @@ app.post("/render", async (req, res) => {
 
     // Configuración Inicial
     let compositionId = "QuoteVideo"; // ID del componente Libro en Root.tsx
-    let durationInFrames = 12 * FPS;  // Duración fija del Libro
+    let durationInFrames = 12 * FPS;  // Duración fija del Libro (12s)
     let finalProps = { ...inputProps };
 
     // --- MODO: VIEJO PAULINO (ASMR) ---
@@ -38,14 +38,21 @@ app.post("/render", async (req, res) => {
       // 1. Elegir video de fondo al azar
       const randomVideo = ASMR_VIDEOS[Math.floor(Math.random() * ASMR_VIDEOS.length)];
 
-      // 2. Calcular duración exacta basada en el audio/subtítulos
-      // n8n debe mandar 'captions' con start/end
-      const captions = inputProps.captions || [];
-      const lastWord = captions[captions.length - 1];
-      const audioEndTime = lastWord ? lastWord.end : 10;
+      // 2. LÓGICA DE DURACIÓN INTELIGENTE 🧠
+      let audioDuration = 10; // Default de seguridad
 
-      // +1.5 seg de margen al final
-      durationInFrames = Math.ceil((audioEndTime + 1.5) * FPS);
+      // Prioridad A: Si n8n nos mandó la duración exacta (uso de Whisper)
+      if (inputProps.durationInSeconds) {
+          audioDuration = inputProps.durationInSeconds;
+      }
+      // Prioridad B: Si no, calculamos por la última palabra (Fallback)
+      else if (inputProps.captions && inputProps.captions.length > 0) {
+          const lastWord = inputProps.captions[inputProps.captions.length - 1];
+          audioDuration = lastWord.end;
+      }
+
+      // 3. Duración exacta + 0.5s de "aire" para que no se corte feo
+      durationInFrames = Math.ceil((audioDuration + 0.5) * FPS);
 
       finalProps = {
         ...inputProps,
@@ -54,8 +61,7 @@ app.post("/render", async (req, res) => {
     }
 
     // --- MODO: LIBRO (Default) ---
-    // No hace falta 'else', ya está configurado arriba como default.
-    // El libro usa 'QuoteVideo' y dura 12s fijos.
+    // Pasa directo con durationInFrames = 360 (12s) y compositionId = QuoteVideo
 
     // --- RENDERIZADO ---
     if (!bundledPath) {
