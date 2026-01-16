@@ -1,8 +1,3 @@
-/**
- * server.ts
- * Motor de Renderizado Central
- * Modos: Libro (Default) | Viejo Paulino (ASMR)
- */
 import express from "express";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
@@ -12,7 +7,6 @@ import os from "os";
 import { ASMR_VIDEOS } from "./src/assets";
 
 const app = express();
-// Límite alto para recibir audios en base64
 app.use(express.json({ limit: "50mb" }));
 
 const PORT = process.env.PORT || 8000;
@@ -21,38 +15,47 @@ let bundledPath: string | null = null;
 app.post("/render", async (req, res) => {
   try {
     const inputProps = req.body;
-    const requestType = inputProps.type || "book"; // Default: Libro
-    console.log(`🎬 Petición: ${requestType}`);
-
+    const requestType = inputProps.type || "book";
     const FPS = 30;
 
-    // Configuración Inicial
-    let compositionId = "QuoteVideo"; // ID del componente Libro en Root.tsx
-    let durationInFrames = 12 * FPS;  // Duración fija del Libro (12s)
+    console.log(`🎬 Petición recibida. Tipo: ${requestType}`);
+
+    // --- CONFIGURACIÓN POR DEFECTO (MODO LIBRO) ---
+    // No tocamos nada aquí. Si no entra al if de abajo, esto es lo que se renderiza.
+    let compositionId = "QuoteVideo";
+    let durationInFrames = 360; // 12 segundos exactos (12 * 30)
     let finalProps = { ...inputProps };
 
     // --- MODO: VIEJO PAULINO (ASMR) ---
     if (requestType === "viejopaulino") {
-      compositionId = "ViejoPaulino"; // ID del componente Paulino en Root.tsx
+      compositionId = "ViejoPaulino";
 
-      // 1. Elegir video de fondo al azar
+      // 1. Video Random
       const randomVideo = ASMR_VIDEOS[Math.floor(Math.random() * ASMR_VIDEOS.length)];
 
-      // 2. LÓGICA DE DURACIÓN INTELIGENTE 🧠
-      let audioDuration = 10; // Default de seguridad
+      // 2. CÁLCULO DE DURACIÓN (Debuggeado)
+      // Imprimimos en los logs qué estamos recibiendo para ver si n8n manda el dato
+      console.log(`⏱ Datos de tiempo recibidos -> Duration: ${inputProps.durationInSeconds}, Captions: ${inputProps.captions?.length}`);
 
-      // Prioridad A: Si n8n nos mandó la duración exacta (uso de Whisper)
+      let audioSeconds = 0;
+
       if (inputProps.durationInSeconds) {
-          audioDuration = inputProps.durationInSeconds;
-      }
-      // Prioridad B: Si no, calculamos por la última palabra (Fallback)
-      else if (inputProps.captions && inputProps.captions.length > 0) {
+          // Opción A: n8n nos mandó el tiempo exacto (Whisper)
+          audioSeconds = Number(inputProps.durationInSeconds);
+      } else if (inputProps.captions && inputProps.captions.length > 0) {
+          // Opción B: Calculamos por la última palabra
           const lastWord = inputProps.captions[inputProps.captions.length - 1];
-          audioDuration = lastWord.end;
+          audioSeconds = lastWord.end;
+      } else {
+          // Opción C: Fallo total (Fallback)
+          console.log("⚠️ ALERTA: No se encontró duración. Usando default 10s.");
+          audioSeconds = 10;
       }
 
-      // 3. Duración exacta + 0.5s de "aire" para que no se corte feo
-      durationInFrames = Math.ceil((audioDuration + 0.5) * FPS);
+      // +0.5 segundos de margen para que no se corte la voz
+      durationInFrames = Math.ceil((audioSeconds + 0.5) * FPS);
+
+      console.log(`✅ Duración calculada: ${audioSeconds}s -> ${durationInFrames} frames`);
 
       finalProps = {
         ...inputProps,
@@ -60,10 +63,7 @@ app.post("/render", async (req, res) => {
       };
     }
 
-    // --- MODO: LIBRO (Default) ---
-    // Pasa directo con durationInFrames = 360 (12s) y compositionId = QuoteVideo
-
-    // --- RENDERIZADO ---
+    // --- EMPAQUETADO Y RENDER ---
     if (!bundledPath) {
       console.log("📦 Empaquetando...");
       bundledPath = await bundle({
@@ -91,7 +91,7 @@ app.post("/render", async (req, res) => {
       fps: FPS,
     });
 
-    console.log("✅ Enviando video...");
+    console.log("✅ Video listo. Enviando...");
 
     res.download(tempOutput, (err) => {
       if (err) console.error(err);
@@ -105,5 +105,5 @@ app.post("/render", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Motor de Video listo en puerto ${PORT}`);
+  console.log(`🚀 Motor listo en puerto ${PORT}`);
 });
