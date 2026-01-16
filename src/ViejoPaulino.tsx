@@ -1,7 +1,10 @@
 import { AbsoluteFill, Video, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { loadFont } from "@remotion/google-fonts/Anton"; // El equivalente Open Source perfecto a IMPACT
 import { z } from "zod";
 
-// Schema de datos
+// Cargar la fuente tipo IMPACT
+const { fontFamily } = loadFont();
+
 export const paulinoSchema = z.object({
   audioData: z.string(),
   videoFile: z.string(),
@@ -18,11 +21,11 @@ export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Buscar palabra actual
+  // 1. Lógica de Subtítulos Sincronizados
   const currentTime = frame / fps;
   const currentWordObj = captions.find(c => currentTime >= c.start && currentTime <= c.end);
 
-  // Animación POP (Rebote)
+  // 2. Animación Ultra-Fluida (Evita trabas de CPU)
   const scale = currentWordObj ? spring({
     frame: frame - (currentWordObj.start * fps),
     fps,
@@ -32,42 +35,54 @@ export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
 
-      {/* VIDEO FONDO */}
+      {/* --- VIDEO DE FONDO --- */}
+      {/* 'loop' lo repite infinitamente si el audio dura más que el video */}
       <Video
         src={staticFile(`asmr/${videoFile}`)}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        loop
-        muted
+        loop={true}
+        volume={0.2} // 20% de volumen del juego original
       />
 
-      {/* CAPA OSCURA */}
-      <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.2)" }} />
-
-      {/* AUDIO */}
-      <Audio src={audioData} />
-
-      {/* SUBTÍTULOS KARAOKE */}
+      {/* CAPA DE CONTRASTE (Solo abajo, donde van las letras) */}
       <div style={{
-        position: "absolute", inset: 0,
-        display: "flex", justifyContent: "center", alignItems: "center",
-        padding: "40px"
+        position: "absolute",
+        bottom: 0, left: 0, right: 0, height: "50%",
+        background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)"
+      }} />
+
+      {/* --- AUDIO DE VOZ IA (100% Volumen) --- */}
+      <Audio src={audioData} volume={1.0} />
+
+      {/* --- SUBTÍTULOS ESTILO IMPACT/TIKTOK --- */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        justifyContent: "center",
+        // ALINEACIÓN ABAJO (Tercio inferior, ideal para no tapar el centro)
+        alignItems: "flex-end",
+        paddingBottom: "25%", // 25% despegado del piso
+        paddingLeft: "10%",
+        paddingRight: "10%"
       }}>
         {currentWordObj && (
           <h1 style={{
-            fontFamily: "'Montserrat', sans-serif", // Fuente del CSS
-            fontSize: 85, // Gigante
-            color: "#FFE800", // Amarillo Viral
-            textTransform: "uppercase",
+            fontFamily,
+            fontSize: 90,
+            color: "white", // Color Blanco
+            textTransform: "uppercase", // Forzar mayúsculas
             textAlign: "center",
-            fontWeight: 900, // Extra Bold
+            fontWeight: "normal", // La fuente Anton ya es muy gruesa
 
-            // BORDE NEGRO
-            WebkitTextStroke: "3px black",
+            // SOMBRA NEGRA (Estilo Impact)
+            WebkitTextStroke: "2px black",
             textShadow: "4px 4px 0px rgba(0,0,0,1)",
 
-            // ANIMACIÓN
+            // ANIMACIÓN DE REBOTE
             transform: `scale(${interpolate(scale, [0, 1], [0.8, 1])})`,
-            margin: 0
+            margin: 0,
+            lineHeight: 1
           }}>
             {currentWordObj.word}
           </h1>
