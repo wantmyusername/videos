@@ -1,13 +1,10 @@
 import { AbsoluteFill, Video, Audio, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
-import { loadFont } from "@remotion/google-fonts/Montserrat";
 import { z } from "zod";
-
-const { fontFamily } = loadFont();
 
 // Schema de datos
 export const paulinoSchema = z.object({
-  audioData: z.string(), // Audio en Base64
-  videoFile: z.string(), // Nombre del archivo ASMR
+  audioData: z.string(),
+  videoFile: z.string(),
   captions: z.array(z.object({
     word: z.string(),
     start: z.number(),
@@ -21,33 +18,35 @@ export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // --- LÓGICA DE SUBTÍTULOS ---
+  // Buscar palabra actual
   const currentTime = frame / fps;
   const currentWordObj = captions.find(c => currentTime >= c.start && currentTime <= c.end);
 
-  // Animación "Pop"
+  // Animación POP (Rebote)
   const scale = currentWordObj ? spring({
     frame: frame - (currentWordObj.start * fps),
     fps,
-    config: { stiffness: 200, damping: 10 }
+    config: { stiffness: 300, damping: 15 }
   }) : 1;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
 
-      {/* 1. VIDEO DE FONDO (Con Loop Automático) */}
-      {/* Remotion hace loop automático si el componente dura más que el video */}
+      {/* VIDEO FONDO */}
       <Video
-        src={staticFile(`asmr/${videoFile}`)} // Asumiendo que están en public/asmr
+        src={staticFile(`asmr/${videoFile}`)}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        loop // <--- ESTO HACE LA MAGIA DEL LOOP INFINITO
+        loop
         muted
       />
 
-      {/* 2. AUDIO (Base64) */}
+      {/* CAPA OSCURA */}
+      <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.2)" }} />
+
+      {/* AUDIO */}
       <Audio src={audioData} />
 
-      {/* 3. SUBTÍTULOS ESTILO TIKTOK */}
+      {/* SUBTÍTULOS KARAOKE */}
       <div style={{
         position: "absolute", inset: 0,
         display: "flex", justifyContent: "center", alignItems: "center",
@@ -55,15 +54,20 @@ export const ViejoPaulino: React.FC<z.infer<typeof paulinoSchema>> = ({
       }}>
         {currentWordObj && (
           <h1 style={{
-            fontFamily,
-            fontSize: 90,
-            color: "#FFE800", // Amarillo Paulino
+            fontFamily: "'Montserrat', sans-serif", // Fuente del CSS
+            fontSize: 85, // Gigante
+            color: "#FFE800", // Amarillo Viral
             textTransform: "uppercase",
             textAlign: "center",
-            fontWeight: 900,
-            WebkitTextStroke: "4px black",
-            textShadow: "6px 6px 0px #000",
-            transform: `scale(${interpolate(scale, [0, 1], [0.8, 1])})`
+            fontWeight: 900, // Extra Bold
+
+            // BORDE NEGRO
+            WebkitTextStroke: "3px black",
+            textShadow: "4px 4px 0px rgba(0,0,0,1)",
+
+            // ANIMACIÓN
+            transform: `scale(${interpolate(scale, [0, 1], [0.8, 1])})`,
+            margin: 0
           }}>
             {currentWordObj.word}
           </h1>
