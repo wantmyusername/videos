@@ -1,13 +1,13 @@
 import React from 'react';
 import { Composition } from "remotion";
 import { QuoteVideo, quoteSchema } from "./QuoteVideo";
-import { CinematicQuote, cinematicSchema } from "./CinematicQuote"; // <--- Importamos el nuevo componente
+import { ViejoPaulino, paulinoSchema } from "./ViejoPaulino";
 import "./style.css";
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* 1. Composición del Libro (La original) */}
+      {/* 1. MODO LIBRO (Tu canal principal) */}
       <Composition
         id="QuoteVideo"
         component={QuoteVideo}
@@ -22,20 +22,21 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
 
-      {/* 2. Composición Cinemática (La nueva) */}
+      {/* 2. MODO VIEJO PAULINO (Tu nuevo canal viral) */}
       <Composition
-        id="CinematicQuote"
-        component={CinematicQuote}
-        durationInFrames={300} // Este valor es solo default, el servidor lo sobrescribe según el video
+        id="ViejoPaulino"
+        component={ViejoPaulino}
+        durationInFrames={300} // Se calcula dinámicamente según el audio
         fps={30}
         width={1080}
         height={1920}
-        schema={cinematicSchema}
+        schema={paulinoSchema}
         defaultProps={{
-          text: "Ejemplo de texto cinemático",
-          author: "Anónimo",
-          videoFile: "video_00001.mp4", // Asegúrate que este nombre coincida con uno real de tu carpeta
-          musicFile: "music_00001.mp3"
+          audioData: "",
+          videoFile: "video_002.mp4", // Asegúrate de tener videos en public/asmr
+          captions: [
+            { word: "Prueba", start: 0, end: 1 }
+          ]
         }}
       />
     </>
