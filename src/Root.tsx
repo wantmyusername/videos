@@ -31,7 +31,7 @@ export const RemotionRoot: React.FC = () => {
         schema={paulinoSchema}
         defaultProps={{
           audioUrl: "", // <--- Ahora usamos URL
-          videoFile: "video_002.mp4",
+          videoFile: "video_001.mp4",
           captions: [
             { word: "Prueba", start: 0, end: 1 }
           ]
