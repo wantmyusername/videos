@@ -26,7 +26,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="ViejoPaulino"
         component={ViejoPaulino}
-        durationInFrames={10} // Se calcula dinámicamente según el audio
+        durationInFrames={300} // Se calcula dinámicamente según el audio
         fps={30}
         width={1080}
         height={1920}

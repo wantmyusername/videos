@@ -79,14 +79,19 @@ app.post("/render", async (req, res) => {
 
     const tempOutput = path.join(os.tmpdir(), `video-${Date.now()}.mp4`);
 
-    console.log(`⚙️ Renderizando ${compositionId} (${durationInFrames} frames)...`);
+    console.log(`⚙️ Renderizando ${compositionId} a ${durationInFrames} frames...`);
 
     await renderMedia({
-      composition,
+      // Usamos los parámetros explícitos
       serveUrl: bundledPath,
+      composition: {
+        ...composition,
+        durationInFrames: durationInFrames, // SOBRESCRIBIMOS A LA FUERZA AQUÍ
+      },
       codec: "h264",
       outputLocation: tempOutput,
       inputProps: finalProps,
+      // Y también lo pasamos acá por si acaso (doble candado)
       durationInFrames: durationInFrames,
       fps: FPS,
     });
