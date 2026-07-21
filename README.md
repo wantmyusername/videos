@@ -1,54 +1,52 @@
-# Remotion video
+# Videos API
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+Renderiza videos automáticos con frases mediante Remotion. Expone una API REST para que **n8n** (o cualquier servicio) envíe texto y reciba el video renderizado.
 
-Welcome to your Remotion project!
+## Cómo funciona
 
-## Commands
+1. Llega un `POST /render` con el texto y autor
+2. Remotion compila el video con el texto superpuesto
+3. Descargas el `.mp4` desde la respuesta
 
-**Install Dependencies**
+## API
 
-```console
-npm i
+### `POST /render`
+
+```json
+{
+  "text": "Frase del video",
+  "author": "Autor de la frase"
+}
 ```
 
-**Start Preview**
+**Respuesta:** archivo `.mp4` listo para descargar.
 
-```console
-npm run dev
+### Variables de entorno
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `PORT` | `8000` | Puerto del servidor |
+
+## Docker
+
+```bash
+docker build -t videos-api .
+docker run -p 8000:8000 videos-api
 ```
 
-**Render video**
+O desde Easypanel: clona el repo y haz deploy.
 
-```console
-npx remotion render
+## Desarrollo local
+
+```bash
+npm install --legacy-peer-deps
+npm run dev        # Remotion Studio (UI de preview)
+npx tsx server.ts  # Servidor API
 ```
 
-**Upgrade Remotion**
+## Stack
 
-```console
-npx remotion upgrade
-```
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+- **Remotion 4** — renderizado de video programático con React
+- **Express** — servidor HTTP
+- **TypeScript**
+- **Docker** — contenedor con Chrome headless y tini para manejo de procesos
