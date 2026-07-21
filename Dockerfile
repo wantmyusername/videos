@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     libgbm1 \
     libasound2 \
     fonts-noto-color-emoji \
+    tini \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -29,5 +30,5 @@ RUN npm install --legacy-peer-deps
 # Exponemos puerto
 EXPOSE 8000
 
-# Arrancamos
+ENTRYPOINT ["tini", "--"]
 CMD ["npx", "tsx", "server.ts"]

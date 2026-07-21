@@ -4,7 +4,10 @@ import { renderMedia, selectComposition } from "@remotion/renderer";
 import path from "path";
 import fs from "fs";
 import os from "os";
-import { ASMR_VIDEOS } from "./src/assets";
+
+const chromeOptions = {
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+};
 
 const app = express();
 app.use(express.json({ limit: "50mb" }));
@@ -19,53 +22,13 @@ app.post("/render", async (req, res) => {
   try {
     const inputProps = req.body;
     const requestType = inputProps.type || "book";
-    const FPS = 30;
+    const FPS = 24;
 
     console.log(`🎬 Petición recibida. Tipo: ${requestType}`);
 
     let compositionId = "QuoteVideo";
     let durationInFrames = 360;
     let finalProps: any = { ...inputProps };
-
-    // --- MODO: VIEJO PAULINO (ASMR) ---
-    if (requestType === "viejopaulino") {
-      compositionId = "ViejoPaulino";
-
-      // 1. Video Random
-      const randomVideo = ASMR_VIDEOS[Math.floor(Math.random() * ASMR_VIDEOS.length)];
-
-      // 2. GUARDAR AUDIO EN DISCO (Optimización de RAM) 💾
-      // Convertimos el base64 a un archivo físico
-      const base64Data = inputProps.audioData.replace(/^data:audio\/mp3;base64,/, "");
-      const audioFileName = `audio-${Date.now()}.mp3`;
-      const audioPath = path.join(os.tmpdir(), audioFileName);
-
-      fs.writeFileSync(audioPath, base64Data, 'base64');
-
-      // Creamos la URL local para que Remotion la lea
-      const audioUrl = `http://localhost:${PORT}/tmp/${audioFileName}`;
-
-      // 3. CÁLCULO DE DURACIÓN
-      let audioSeconds = 10; // Default
-
-      if (inputProps.durationInSeconds) {
-          audioSeconds = Number(inputProps.durationInSeconds);
-      } else if (inputProps.captions && inputProps.captions.length > 0) {
-          const lastWord = inputProps.captions[inputProps.captions.length - 1];
-          audioSeconds = lastWord.end;
-      }
-
-      durationInFrames = Math.ceil((audioSeconds + 0.5) * FPS);
-      console.log(`✅ Duración: ${audioSeconds}s -> ${durationInFrames} frames`);
-
-      // 4. Props finales (Pasamos la URL, borramos el base64 pesado)
-      finalProps = {
-        ...inputProps,
-        videoFile: randomVideo,
-        audioUrl: audioUrl,
-        audioData: undefined // Liberar memoria
-      };
-    }
 
     // --- RENDER ---
     if (!bundledPath) {
@@ -96,7 +59,8 @@ app.post("/render", async (req, res) => {
       inputProps: finalProps,
       durationInFrames: durationInFrames,
       fps: FPS,
-      concurrency: os.cpus().length, // Usa todos los núcleos para ir más rápido
+      concurrency: Math.min(os.cpus().length, 2),
+      chromiumOptions: chromeOptions,
     });
 
     console.log("✅ Video listo. Enviando...");
