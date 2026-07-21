@@ -25,7 +25,7 @@ WORKDIR /app
 COPY . .
 
 # 2. Ahora sí instalamos (usamos legacy-peer-deps para evitar conflictos)
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
 # Exponemos puerto
 EXPOSE 8000
