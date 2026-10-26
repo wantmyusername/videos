@@ -34,6 +34,84 @@ const MAPBOX_STYLE =
 const MAPBOX_PADDING = Number(process.env.MAPBOX_PADDING ?? 0.55);
 const MAP_ATTRIBUTION = "© Mapbox © OpenStreetMap contributors";
 const MERCATOR_LAT_LIMIT = 85.05112878;
+const FLIGHT_DATA_DIR = path.join(process.cwd(), "data");
+
+type AirportInfo = {
+  city: string;
+  country: string;
+  lat: number;
+  lng: number;
+};
+
+type RouteRow = [string, string, string, string, number];
+
+type FlightRoute = {
+  airline: string;
+  code: string;
+  originIata: string;
+  destinationIata: string;
+  distanceKm: number;
+  origin: AirportInfo;
+  destination: AirportInfo;
+};
+
+const loadJson = <T>(file: string, fallback: T): T => {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8")) as T;
+  } catch (error) {
+    console.warn(`No se pudo cargar ${file}:`, error);
+    return fallback;
+  }
+};
+
+const AIRPORTS = loadJson<Record<string, AirportInfo>>(
+  path.join(FLIGHT_DATA_DIR, "airports.json"),
+  {},
+);
+const ROUTE_ROWS = loadJson<RouteRow[]>(
+  path.join(FLIGHT_DATA_DIR, "routes.json"),
+  [],
+);
+const FLIGHT_ROUTES: FlightRoute[] = ROUTE_ROWS.flatMap(
+  ([airline, code, originIata, destinationIata, distanceKm]) => {
+    const origin = AIRPORTS[originIata];
+    const destination = AIRPORTS[destinationIata];
+
+    if (!origin || !destination) {
+      return [];
+    }
+
+    return [
+      {
+        airline,
+        code,
+        originIata,
+        destinationIata,
+        distanceKm,
+        origin,
+        destination,
+      },
+    ];
+  },
+);
+
+const normalizeCountry = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const formatFlightDuration = (distanceKm: number) => {
+  const minutes = Math.max(
+    20,
+    Math.round(((distanceKm / 800 + 0.6) * 60) / 5) * 5,
+  );
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${hours}h ${String(remainingMinutes).padStart(2, "0")}m`;
+};
 
 try {
   fs.mkdirSync(MAPS_DIR, { recursive: true });
@@ -152,6 +230,7 @@ app.get("/health", (_req, res) => {
     ok: true,
     compositionIds: ["FlightVideo"],
     mapboxConfigured: Boolean(MAPBOX_ACCESS_TOKEN),
+    flightRoutes: FLIGHT_ROUTES.length,
   });
 });
 
@@ -250,6 +329,109 @@ app.post("/map", async (req, res) => {
     });
   } catch (err) {
     console.error("🔥 Error mapa:", err);
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+app.get("/random-flight", (req, res) => {
+  try {
+    if (FLIGHT_ROUTES.length === 0) {
+      res.status(503).json({
+        error: "La base de rutas no está disponible",
+      });
+      return;
+    }
+
+    const scope =
+      typeof req.query.scope === "string" ? req.query.scope : "world";
+
+    if (!["world", "domestic", "international"].includes(scope)) {
+      res.status(400).json({
+        error: "scope debe ser world, domestic o international",
+      });
+      return;
+    }
+
+    const minKm = Math.max(
+      0,
+      Number(req.query.minKm ?? 100) || 100,
+    );
+    const maxKm = Math.max(
+      minKm,
+      Number(req.query.maxKm ?? 20000) || 20000,
+    );
+    const country =
+      typeof req.query.country === "string" && req.query.country.trim()
+        ? normalizeCountry(req.query.country)
+        : null;
+
+    const candidates = FLIGHT_ROUTES.filter((route) => {
+      if (route.distanceKm < minKm || route.distanceKm > maxKm) {
+        return false;
+      }
+
+      const isDomestic =
+        normalizeCountry(route.origin.country) ===
+        normalizeCountry(route.destination.country);
+
+      if (scope === "domestic" && !isDomestic) {
+        return false;
+      }
+
+      if (scope === "international" && isDomestic) {
+        return false;
+      }
+
+      if (
+        country &&
+        normalizeCountry(route.origin.country) !== country
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (candidates.length === 0) {
+      res.status(404).json({
+        error: "No hay rutas que coincidan con los filtros",
+      });
+      return;
+    }
+
+    const route =
+      candidates[Math.floor(Math.random() * candidates.length)];
+    const flightNumber = `${route.code} ${
+      100 + Math.floor(Math.random() * 9900)
+    }`;
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      flight_number: flightNumber,
+      airline: route.airline,
+      origin: {
+        city: route.origin.city,
+        country: route.origin.country,
+        iata: route.originIata,
+        lat: route.origin.lat,
+        lng: route.origin.lng,
+      },
+      destination: {
+        city: route.destination.city,
+        country: route.destination.country,
+        iata: route.destinationIata,
+        lat: route.destination.lat,
+        lng: route.destination.lng,
+      },
+      distance_km: route.distanceKm,
+      flight_time_formatted: formatFlightDuration(route.distanceKm),
+      mapStyle: Math.random() < 0.5 ? "night" : "day",
+      mapMode: "auto",
+      dataSource: "OpenFlights",
+      syntheticFlightNumber: true,
+    });
+  } catch (err) {
+    console.error("🔥 Error random-flight:", err);
     res.status(500).json({ error: (err as Error).message });
   }
 });

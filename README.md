@@ -102,6 +102,64 @@ La imagen se pide en `720x1280@2x` y se cachea por ruta/estilo. n8n solo recibe 
 
 **Respuesta:** archivo `.mp4` listo para descargar.
 
+### `GET /random-flight`
+
+Devuelve una ruta directa aleatoria desde la base local (OpenFlights).
+
+```bash
+curl "http://localhost:8000/random-flight?scope=world&minKm=150"
+```
+
+Parámetros:
+
+- `scope`: `world` (default), `domestic` o `international`.
+- `country`: nombre del país de origen, por ejemplo `Mexico`.
+- `minKm`: distancia mínima, default `100`.
+- `maxKm`: distancia máxima, default `20000`.
+
+Ejemplos:
+
+```bash
+# Ruta nacional en México
+curl "http://localhost:8000/random-flight?scope=domestic&country=Mexico&minKm=150"
+
+# Ruta internacional larga
+curl "http://localhost:8000/random-flight?scope=international&minKm=5000"
+```
+
+Respuesta:
+
+```json
+{
+  "flight_number": "IB 4821",
+  "airline": "Iberia",
+  "origin": {
+    "city": "Madrid",
+    "country": "Spain",
+    "iata": "MAD",
+    "lat": 40.471926,
+    "lng": -3.56264
+  },
+  "destination": {
+    "city": "Buenos Aires",
+    "country": "Argentina",
+    "iata": "EZE",
+    "lat": -34.8222,
+    "lng": -58.5358
+  },
+  "distance_km": 10050,
+  "flight_time_formatted": "13h 15m",
+  "mapStyle": "night",
+  "mapMode": "auto",
+  "dataSource": "OpenFlights",
+  "syntheticFlightNumber": true
+}
+```
+
+La base contiene ~50,000 rutas directas. OpenFlights no incluye números de vuelo reales: el número se genera y se marca con `syntheticFlightNumber: true`. Para vuelos reales y actuales hace falta una API de vuelos de pago.
+
+La base se genera desde OpenFlights (ODbL). Ver [`data/README.md`](data/README.md).
+
 ### `GET /health`
 
 Devuelve las composiciones disponibles y sirve para verificar que el motor está vivo.
@@ -110,7 +168,8 @@ Devuelve las composiciones disponibles y sirve para verificar que el motor está
 {
   "ok": true,
   "compositionIds": ["FlightVideo"],
-  "mapboxConfigured": true
+  "mapboxConfigured": true,
+  "flightRoutes": 50345
 }
 ```
 
