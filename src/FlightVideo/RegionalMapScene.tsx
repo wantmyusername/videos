@@ -743,6 +743,7 @@ export const RegionalMapScene: React.FC<{
             transform: `translate(${translateX}px, ${translateY}px) scale(${zoom})`,
             transformOrigin: "0 0",
             display: "block",
+            filter: "brightness(1.16) contrast(1.03) saturate(1.08)",
           }}
         />
       ) : null}

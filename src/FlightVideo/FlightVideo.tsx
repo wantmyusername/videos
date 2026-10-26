@@ -216,7 +216,7 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
       <AbsoluteFill
         style={{
           background:
-            "radial-gradient(circle at 50% 42%, #1e293b 0%, #0b1220 48%, #020617 100%)",
+            "radial-gradient(circle at 50% 42%, #243449 0%, #111c2e 48%, #060b14 100%)",
         }}
       />
 
@@ -251,8 +251,8 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
       <AbsoluteFill
         style={{
           background: hasStaticMap
-            ? "linear-gradient(180deg, rgba(2,6,23,0.78) 0%, rgba(2,6,23,0.22) 30%, rgba(2,6,23,0) 48%, rgba(2,6,23,0.35) 78%, rgba(2,6,23,0.82) 100%)"
-            : "linear-gradient(180deg, rgba(2,6,23,0.9) 0%, rgba(2,6,23,0.35) 30%, rgba(2,6,23,0) 48%, rgba(2,6,23,0.55) 78%, rgba(2,6,23,0.92) 100%)",
+            ? "linear-gradient(180deg, rgba(2,6,23,0.76) 0%, rgba(2,6,23,0.2) 30%, rgba(2,6,23,0) 48%, rgba(2,6,23,0.24) 78%, rgba(2,6,23,0.76) 100%)"
+            : "linear-gradient(180deg, rgba(2,6,23,0.48) 0%, rgba(2,6,23,0.06) 28%, rgba(2,6,23,0) 50%, rgba(2,6,23,0) 82%, rgba(2,6,23,0.16) 100%)",
           pointerEvents: "none",
         }}
       />
@@ -260,8 +260,8 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
       <AbsoluteFill
         style={{
           background: hasStaticMap
-            ? "radial-gradient(ellipse at center, rgba(2,6,23,0) 40%, rgba(2,6,23,0.35) 100%)"
-            : "radial-gradient(ellipse at center, rgba(2,6,23,0) 35%, rgba(2,6,23,0.55) 100%)",
+            ? "radial-gradient(ellipse at center, rgba(2,6,23,0) 42%, rgba(2,6,23,0.18) 100%)"
+            : "radial-gradient(ellipse at center, rgba(2,6,23,0) 60%, rgba(2,6,23,0.04) 100%)",
           pointerEvents: "none",
         }}
       />
