@@ -1,4 +1,4 @@
-FROM node:18-bullseye
+FROM node:22-bookworm
 
 # Instalar Chrome y dependencias
 RUN apt-get update && apt-get install -y \
@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     libgbm1 \
     libasound2 \
+    libxss1 \
     libgl1 \
     libgl1-mesa-dri \
     libglx-mesa0 \
