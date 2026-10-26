@@ -3,7 +3,6 @@ import {
   interpolate,
   useCurrentFrame,
   useVideoConfig,
-  Easing,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { z } from "zod";
@@ -42,7 +41,7 @@ export const DataVersus: React.FC<z.infer<typeof myCompSchema>> = ({
   data,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, width, height, durationInFrames } = useVideoConfig();
+  const { fps, height, durationInFrames } = useVideoConfig();
 
   // --- TIEMPOS DINÁMICOS ---
   // Usamos porcentajes del video total para que siempre cuadre

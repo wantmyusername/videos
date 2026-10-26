@@ -15,9 +15,15 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     libgbm1 \
     libasound2 \
+    libgl1 \
+    libgl1-mesa-dri \
+    libglx-mesa0 \
+    xvfb \
     fonts-noto-color-emoji \
     tini \
     && rm -rf /var/lib/apt/lists/*
+
+ENV REMOTION_GL=swangle
 
 WORKDIR /app
 

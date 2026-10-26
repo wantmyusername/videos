@@ -1,0 +1,260 @@
+{
+  "name": "Flight Video - Remotion",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1f0c2d4-0001-4a1b-8c2d-100000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const flights = [\n  {\n    flight_number: 'Y4 821',\n    airline: 'Volaris',\n    origin: { city: 'Puerto Vallarta', country: 'México', iata: 'PVR', lat: 20.6801, lng: -105.2544 },\n    destination: { city: 'Guadalajara', country: 'México', iata: 'GDL', lat: 20.5218, lng: -103.3112 },\n    distance_km: 202,\n    flight_time_formatted: '0h 55m',\n    mapStyle: 'night',\n  },\n  {\n    flight_number: 'CX805',\n    airline: 'Cathay Pacific',\n    origin: { city: 'Toronto', country: 'Canadá', iata: 'YYZ', lat: 43.6777, lng: -79.6248 },\n    destination: { city: 'Hong Kong', country: 'China', iata: 'HKG', lat: 22.308, lng: 113.9185 },\n    distance_km: 12567,\n    flight_time_formatted: '15h 25m',\n    mapStyle: 'day',\n  },\n  {\n    flight_number: 'AM 650',\n    airline: 'Aeroméxico',\n    origin: { city: 'Ciudad de México', country: 'México', iata: 'MEX', lat: 19.4361, lng: -99.0719 },\n    destination: { city: 'Los Ángeles', country: 'Estados Unidos', iata: 'LAX', lat: 33.9416, lng: -118.4085 },\n    distance_km: 2490,\n    flight_time_formatted: '4h 05m',\n    mapStyle: 'day',\n  },\n  {\n    flight_number: 'VB 3005',\n    airline: 'Viva Aerobus',\n    origin: { city: 'Cancún', country: 'México', iata: 'CUN', lat: 21.0365, lng: -86.8771 },\n    destination: { city: 'Ciudad de México', country: 'México', iata: 'MEX', lat: 19.4361, lng: -99.0719 },\n    distance_km: 1285,\n    flight_time_formatted: '2h 20m',\n    mapStyle: 'night',\n  },\n  {\n    flight_number: 'AM 1',\n    airline: 'Aeroméxico',\n    origin: { city: 'Ciudad de México', country: 'México', iata: 'MEX', lat: 19.4361, lng: -99.0719 },\n    destination: { city: 'Madrid', country: 'España', iata: 'MAD', lat: 40.4719, lng: -3.5626 },\n    distance_km: 9070,\n    flight_time_formatted: '10h 30m',\n    mapStyle: 'day',\n  },\n  {\n    flight_number: 'LA 2477',\n    airline: 'LATAM',\n    origin: { city: 'Lima', country: 'Perú', iata: 'LIM', lat: -12.0219, lng: -77.1143 },\n    destination: { city: 'Santiago', country: 'Chile', iata: 'SCL', lat: -33.393, lng: -70.7858 },\n    distance_km: 2460,\n    flight_time_formatted: '3h 40m',\n    mapStyle: 'day',\n  },\n  {\n    flight_number: 'AF 006',\n    airline: 'Air France',\n    origin: { city: 'París', country: 'Francia', iata: 'CDG', lat: 49.0097, lng: 2.5479 },\n    destination: { city: 'Nueva York', country: 'Estados Unidos', iata: 'JFK', lat: 40.6413, lng: -73.7781 },\n    distance_km: 5840,\n    flight_time_formatted: '8h 20m',\n    mapStyle: 'night',\n  },\n  {\n    flight_number: 'EK 201',\n    airline: 'Emirates',\n    origin: { city: 'Dubái', country: 'Emiratos Árabes Unidos', iata: 'DXB', lat: 25.2532, lng: 55.3657 },\n    destination: { city: 'Nueva York', country: 'Estados Unidos', iata: 'JFK', lat: 40.6413, lng: -73.7781 },\n    distance_km: 11010,\n    flight_time_formatted: '13h 45m',\n    mapStyle: 'day',\n  },\n  {\n    flight_number: 'QF 1',\n    airline: 'Qantas',\n    origin: { city: 'Sídney', country: 'Australia', iata: 'SYD', lat: -33.9399, lng: 151.1753 },\n    destination: { city: 'Singapur', country: 'Singapur', iata: 'SIN', lat: 1.3644, lng: 103.9915 },\n    distance_km: 6300,\n    flight_time_formatted: '8h 05m',\n    mapStyle: 'day',\n  },\n  {\n    flight_number: 'IB 6250',\n    airline: 'Iberia',\n    origin: { city: 'Madrid', country: 'España', iata: 'MAD', lat: 40.4719, lng: -3.5626 },\n    destination: { city: 'Buenos Aires', country: 'Argentina', iata: 'EZE', lat: -34.8222, lng: -58.5358 },\n    distance_km: 10050,\n    flight_time_formatted: '13h 15m',\n    mapStyle: 'night',\n  },\n];\n\nconst flight = flights[Math.floor(Math.random() * flights.length)];\n\nreturn [{ json: flight }];",
+        "options": {}
+      },
+      "id": "a1f0c2d4-0002-4a1b-8c2d-100000000002",
+      "name": "Elegir vuelo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-4o-mini', temperature: 0.8, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: 'Eres guionista de documentales de aviación para videos verticales. Escribe en español neutro, claro y cinematográfico. Devuelve SOLO JSON válido con las claves title_overlay, subtitle_overlay y script.' }, { role: 'user', content: 'Vuelo ' + $json.flight_number + ' de ' + $json.airline + ' entre ' + $json.origin.city + ' (' + $json.origin.iata + ') y ' + $json.destination.city + ' (' + $json.destination.iata + '). Distancia: ' + $json.distance_km + ' km. Duración: ' + $json.flight_time_formatted + '. title_overlay: máximo 28 caracteres en mayúsculas, formato CIUDAD - CIUDAD. subtitle_overlay: una frase gancho de máximo 60 caracteres. script: narración de 35 a 55 palabras, sin datos inventados, empezando con una pregunta o dato curioso.' } ] }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "a1f0c2d4-0003-4a1b-8c2d-100000000003",
+      "name": "Generar guion (OpenAI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const flight = $('Elegir vuelo').first().json;\nconst response = $input.first().json;\nconst raw =\n  response.choices &&\n  response.choices[0] &&\n  response.choices[0].message\n    ? response.choices[0].message.content\n    : '{}';\n\nlet generated = {};\ntry {\n  let cleaned = String(raw).trim();\n  const fence = String.fromCharCode(96).repeat(3);\n  cleaned = cleaned.split(fence).join('').trim();\n  if (cleaned.toLowerCase().startsWith('json')) {\n    cleaned = cleaned.slice(4).trim();\n  }\n  generated = JSON.parse(cleaned);\n} catch (error) {\n  generated = {};\n}\n\nconst title =\n  generated.title_overlay ||\n  (flight.origin.city + ' - ' + flight.destination.city).toUpperCase();\nconst subtitle =\n  generated.subtitle_overlay ||\n  'La ruta entre ' + flight.origin.city + ' y ' + flight.destination.city;\nconst script = generated.script || '';\nconst wordCount = script.split(/\\s+/).filter(Boolean).length;\nconst seconds = Math.min(60, Math.max(25, Math.ceil(wordCount / 2.6) + 4));\nconst totalFrames = Math.ceil(seconds * 30);\n\nreturn [\n  {\n    json: {\n      type: 'flight',\n      compositionId: 'FlightVideo',\n      flight_number: flight.flight_number,\n      airline: flight.airline,\n      origin: flight.origin,\n      destination: flight.destination,\n      distance_km: flight.distance_km,\n      flight_time_formatted: flight.flight_time_formatted,\n      title_overlay: title,\n      subtitle_overlay: subtitle,\n      script,\n      totalFrames,\n      mapStyle: flight.mapStyle || 'day',\n      mapMode: 'auto',\n    },\n  },\n];",
+        "options": {}
+      },
+      "id": "a1f0c2d4-0004-4a1b-8c2d-100000000004",
+      "name": "Preparar render",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://videos.appsengine.us/render",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 900000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "a1f0c2d4-0005-4a1b-8c2d-100000000005",
+      "name": "Render Remotion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Antes de ejecutar\n1. En \"Generar guion (OpenAI)\" selecciona tu credencial de OpenAI.\n2. En \"Obtener mapa\" y \"Render Remotion\" revisa la URL del motor (por defecto videos.appsengine.us).\n3. El motor necesita MAPBOX_ACCESS_TOKEN para generar el mapa regional.\n4. La salida es el binario \"data\": conéctala a Telegram, Drive o S3.\n\nEl campo script queda listo para el siguiente paso (TTS + Whisper). Sin audioUrl, el video usa solo el audio ambiente.",
+        "height": 220,
+        "width": 600,
+        "color": 5
+      },
+      "id": "a1f0c2d4-0006-4a1b-8c2d-100000000006",
+      "name": "Configuración",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.distance_km }}",
+              "operation": "smaller",
+              "value2": 2500
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1f0c2d4-0006-4a1b-8c2d-100000000006",
+      "name": "¿Es regional?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://videos.appsengine.us/map",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ origin: $json.origin, destination: $json.destination, style: 'mapbox/navigation-night-v1' }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "a1f0c2d4-0007-4a1b-8c2d-100000000007",
+      "name": "Obtener mapa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Preparar render').first().json;\nconst map = $input.first().json;\nreturn [\n  {\n    json: {\n      ...base,\n      mapImageUrl: map.mapImageUrl,\n      mapBbox: map.mapBbox,\n      mapAttribution: map.mapAttribution,\n    },\n  },\n];",
+        "options": {}
+      },
+      "id": "a1f0c2d4-0008-4a1b-8c2d-100000000008",
+      "name": "Unir mapa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        80
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Elegir vuelo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elegir vuelo": {
+      "main": [
+        [
+          {
+            "node": "Generar guion (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar guion (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "Preparar render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar render": {
+      "main": [
+        [
+          {
+            "node": "¿Es regional?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es regional?": {
+      "main": [
+        [
+          {
+            "node": "Obtener mapa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Render Remotion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener mapa": {
+      "main": [
+        [
+          {
+            "node": "Unir mapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unir mapa": {
+      "main": [
+        [
+          {
+            "node": "Render Remotion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7e1d3f5-0001-4c2d-9e3f-200000000001",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

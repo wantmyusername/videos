@@ -1,131 +1,172 @@
 # Videos API
 
-API REST que renderiza **videos verticales de frases (1080×1920)** a `.mp4` usando **Remotion**. Envías un texto (y opcionalmente un autor) por HTTP y recibes el video renderizado. Pensada para integrarse con **n8n** o cualquier servicio que necesite generar videos automáticamente.
+Renderiza videos verticales 1080x1920 con Remotion. Expone una API REST para que **n8n** (o cualquier servicio) envíe los datos y reciba el `.mp4` renderizado.
 
-## Cómo funciona
+## Composiciones
 
-1. Llega un `POST /render` con el texto (y opcionalmente autor).
-2. Remotion empaqueta la composición (una sola vez) y renderiza el video con el texto superpuesto sobre un fondo con música y un efecto de "libro".
-3. La respuesta es el `.mp4` listo para descargar.
+| ID | Descripción |
+|----|-------------|
+| `FlightVideo` | Documental de vuelo con globo 3D o mapa regional |
+
+`FlightVideo` elige globo 3D o mapa regional según `mapMode`:
+
+- `auto`: mapa regional si la ruta mide menos de 2500 km.
+- `globe`: siempre globo 3D.
+- `regional`: siempre mapa regional.
+
+El mapa regional puede usar una imagen estática de Mapbox (`mapImageUrl` + `mapBbox`) y Remotion solo dibuja la ruta y el avión encima. Si no se envía imagen, usa el mapa SVG offline de respaldo con Natural Earth (fronteras, estados, lagos, ríos y etiquetas).
+
+## Mapa estático
+
+`POST /map` genera la imagen de la ruta con Mapbox, la guarda en `SHARED_DIR/maps` y devuelve la URL local junto con el `bbox` para que Remotion alinee la ruta.
+
+```json
+{
+  "origin": { "lat": 20.6801, "lng": -105.2544 },
+  "destination": { "lat": 20.5218, "lng": -103.3112 },
+  "style": "mapbox/navigation-night-v1"
+}
+```
+
+```json
+{
+  "mapImageUrl": "http://localhost:8000/shared/maps/map-abc123.png",
+  "mapBbox": [-106.32, 17.17, -102.24, 23.96],
+  "mapAttribution": "© Mapbox © OpenStreetMap contributors",
+  "mapStyle": "mapbox/navigation-night-v1",
+  "mapWidth": 1440,
+  "mapHeight": 2560,
+  "cached": true
+}
+```
+
+La imagen se pide en `720x1280@2x` y se cachea por ruta/estilo. n8n solo recibe el JSON y lo mezcla con los datos del vuelo.
 
 ## API
 
 ### `POST /render`
 
-**Request:**
+**Vuelo (FlightVideo):**
 
 ```json
 {
-  "text": "La disciplina es el puente entre las metas y los logros.",
-  "author": "Jim Rohn"
+  "type": "flight",
+  "compositionId": "FlightVideo",
+  "flight_number": "Y4 821",
+  "airline": "Volaris",
+  "origin": {
+    "city": "Puerto Vallarta",
+    "country": "México",
+    "iata": "PVR",
+    "lat": 20.6801,
+    "lng": -105.2544
+  },
+  "destination": {
+    "city": "Guadalajara",
+    "country": "México",
+    "iata": "GDL",
+    "lat": 20.5218,
+    "lng": -103.3112
+  },
+  "distance_km": 202,
+  "flight_time_formatted": "0h 55m",
+  "title_overlay": "VALLARTA - GUADALAJARA",
+  "subtitle_overlay": "La ruta entre la costa y la Perla de Occidente",
+  "script": "Texto de la narración...",
+  "audioUrl": "https://tu-servidor/shared/narracion.mp3",
+  "words": [
+    { "word": "Hola", "start": 0.0, "end": 0.4 }
+  ],
+  "totalFrames": 900,
+  "mapStyle": "night",
+  "mapMode": "auto",
+  "mapImageUrl": "http://localhost:8000/shared/maps/map-abc123.png",
+  "mapBbox": [-106.32, 17.17, -102.24, 23.96],
+  "mapAttribution": "© Mapbox © OpenStreetMap contributors"
 }
 ```
 
-| Campo | Tipo | Obligatorio | Descripción |
-|---|---|---|---|
-| `text` | string | Sí | Frase que aparece en el video. |
-| `author` | string | No | Autor; si va, se muestra abajo en cursiva. |
-| `type` | string | No | Etiqueta de log (hoy no cambia la composición; se renderiza siempre `QuoteVideo`). |
+`type: "flight"` es equivalente a `compositionId: "FlightVideo"`. Para preview en Studio usa `FlightVideoPreview`.
 
-**Respuesta:** el archivo `.mp4` (`h264`) para descargar. En caso de error, JSON `{ "error": "..." }` con status 500.
+**Campos opcionales:**
 
-**Ejemplo con `curl`:**
+- `audioUrl`: narración TTS. Debe ser una URL pública o servida desde `/shared`.
+- `words`: timestamps de Whisper para subtítulos karaoke. Si se omite, no se muestran subtítulos.
+- `totalFrames`: duración base en frames (30 FPS). El video final añade 2 s para el end card.
+- `mapStyle`: `day` o `night`. Default `day`.
+- `mapMode`: `auto`, `globe` o `regional`. Default `auto`.
+- `mapImageUrl`: imagen estática para el mapa regional. Se genera con `POST /map`.
+- `mapBbox`: `[minLng, minLat, maxLng, maxLat]` de la imagen. Necesario para alinear ruta y avión.
+- `mapAttribution`: atribución que se muestra en el video.
+- `whiteNoiseStartSeconds`: segundo en que entra `Sonido_Blanco`. Default `1`.
 
-```bash
-curl -X POST http://localhost:8000/render \
-  -H 'Content-Type: application/json' \
-  -d '{"text":"La disciplina es el puente entre las metas y los logros.","author":"Jim Rohn"}' \
-  -o video.mp4
+**Respuesta:** archivo `.mp4` listo para descargar.
+
+### `GET /health`
+
+Devuelve las composiciones disponibles y sirve para verificar que el motor está vivo.
+
+```json
+{
+  "ok": true,
+  "compositionIds": ["FlightVideo"],
+  "mapboxConfigured": true
+}
 ```
 
 ### Variables de entorno
 
 | Variable | Default | Descripción |
-|---|---|---|
-| `PORT` | `8000` | Puerto del servidor HTTP. |
+|----------|---------|-------------|
+| `PORT` | `8000` | Puerto del servidor |
+| `REMOTION_GL` | `angle` | Backend WebGL (`swangle` en servidores sin GPU) |
+| `SHARED_DIR` | `/shared` | Carpeta montada y servida en `/shared` para audios y mapas |
+| `PUBLIC_BASE_URL` | URL de la petición | Base para convertir `audioUrl` y `mapImageUrl` relativas en absolutas |
+| `MAPBOX_ACCESS_TOKEN` | — | Token de Mapbox para `POST /map` |
+| `MAPBOX_STYLE` | `mapbox/navigation-night-v1` | Estilo de Mapbox para el mapa regional |
+| `MAPBOX_PADDING` | `0.55` | Margen alrededor de la ruta para la cámara del mapa |
 
-## Requisitos
+## Flujo con n8n
 
-- **Node.js 18+** y npm.
-- **Chrome/Chromium** disponible para Remotion (el `Dockerfile` ya lo instala).
+Workflow listo para importar: [`n8n/flight-video-remotion.json`](n8n/flight-video-remotion.json). Incluye selección aleatoria de vuelo, generación del guion con OpenAI, mapa estático para rutas regionales y render en Remotion.
 
-## Desarrollo local
+1. Elegir un vuelo (número, aerolínea, origen, destino y coordenadas).
+2. Generar `title_overlay`, `subtitle_overlay` y `script` con el LLM.
+3. Generar el audio TTS y subirlo a un volumen compartido o a S3/R2.
+4. Si `distance_km < 2500`, llamar `POST /map` y mezclar `mapImageUrl`, `mapBbox` y `mapAttribution` con el payload.
+5. Enviar `POST /render` con `type: "flight"`.
+6. Configurar el nodo HTTP Request con timeout de `900000` ms. El primer render empaqueta el proyecto y tarda más.
 
-```bash
-npm install --legacy-peer-deps
+El workflow ya incluye el nodo `¿Es regional?`, `Obtener mapa` y `Unir mapa`. Ajusta la URL base `https://videos.appsengine.us` a tu dominio o a `http://localhost:8000` en local.
 
-npm run dev          # Remotion Studio (preview/UI en el navegador)
-npx tsx server.ts    # Servidor API en http://localhost:8000
-```
-
-Otros scripts:
-
-| Comando | Qué hace |
-|---|---|
-| `npm run dev` | Abre Remotion Studio para previsualizar la composición. |
-| `npm run build` | `remotion bundle` (empaqueta la composición). |
-| `npm run lint` | `eslint src && tsc`. |
+Para subtítulos, transcribir el audio con Whisper y enviar `words` (`start`/`end` en segundos) y `totalFrames` (`duración_segundos * 30`).
 
 ## Docker
 
 ```bash
 docker build -t videos-api .
-docker run -p 8000:8000 videos-api
+docker run -p 8000:8000 \
+  -e MAPBOX_ACCESS_TOKEN=tu_token \
+  -e PUBLIC_BASE_URL=https://tu-dominio \
+  -v /ruta/compartida:/shared \
+  videos-api
 ```
 
-La imagen usa `node:18-bullseye` con Chromium, `tini` como init (para no dejar procesos zombie) y arranca con `npx tsx server.ts`.
+O desde Easypanel: clona el repo y haz deploy. El contenedor incluye `libgl`, `xvfb` y usa `REMOTION_GL=swangle` para renderizar WebGL sin GPU.
 
-## Deploy (EasyPanel)
+## Desarrollo local
 
-Conecta el repo como servicio, expone el puerto **8000** y usa el `Dockerfile` incluido. No requiere variables de entorno más allá de `PORT` (opcional).
-
-## Estructura
-
+```bash
+npm install --legacy-peer-deps
+npm run dev        # Remotion Studio (UI de preview)
+npx tsx server.ts  # Servidor API
+npm run lint       # ESLint + TypeScript
 ```
-server.ts              Servidor Express: POST /render + estáticos
-src/
-  index.ts             registerRoot de Remotion
-  Root.tsx             Registra la composición QuoteVideo
-  QuoteVideo.tsx       Composición: frase + autor sobre fondo con música
-  DataVersus.tsx       (componente no registrado en Root)
-  HelloWorld/          (componentes de ejemplo, no registrados en Root)
-public/
-  piano.mp3            Música de fondo de QuoteVideo
-  background.jpg       Imagen de fondo
-  music/ videos/ asmr/ Assets de audio/video
-Dockerfile             Chrome + tini + tsx
-remotion.config.ts     Config de Remotion (jpeg, overwrite)
-```
-
-## Composición `QuoteVideo`
-
-| Prop | Tipo | Default |
-|---|---|---|
-| `id` | — | `QuoteVideo` |
-| `width` × `height` | — | `1080×1920` (vertical) |
-| `durationInFrames` | — | `360` |
-| `fps` | — | `30` en `Root.tsx` (el server lo fuerza a `24`) |
-| `text` | string | `"El éxito es ir de fracaso en fracaso."` |
-| `author` | string (opcional) | `"Winston Churchill"` |
-
-Usa `public/piano.mp3` como audio de fondo y `public/background.jpg` como imagen.
-
-## Notas y limitaciones
-
-- El servidor **siempre** renderiza la composición `QuoteVideo` y **fuerza** `durationInFrames = 360` a **24 fps** (`FPS` en `server.ts`), sin importar el `fps` declarado en `Root.tsx`.
-- El campo `type` solo se usa para el log; no selecciona distintas composiciones.
-- `DataVersus` y los componentes de `HelloWorld/` están en el repo pero **no están registrados** en `Root.tsx`, así que no se pueden renderizar vía la API.
-- La concurrencia de render se limita a **2** (`Math.min(cpus, 2)`) para no agotar recursos/PIDs en el contenedor.
-- El servidor monta `express.static(os.tmpdir())` en `/tmp`, lo que **expone el directorio temporal del contenedor** por HTTP. Se usa para que Remotion lea audios temporales; conviene restringirlo o servirlo desde un subdirectorio acotado antes de exponer esto públicamente.
-- Un render bloquea recursos por petición; no hay cola ni límite de tasa, así que para uso intensivo conviene añadir una cola/worker aparte.
 
 ## Stack
 
-- **Remotion 4** — renderizado de video programático con React.
-- **Express 5** — servidor HTTP.
-- **TypeScript** · **React 19** · **Zod**.
-- **Docker** — Chromium headless + `tini`.
-
-## Licencia
-
-Sin licencia (`UNLICENSED` en `package.json`). Uso privado.
+- **Remotion 4** — renderizado de video programático con React
+- **Three.js** — globo 3D de los vuelos
+- **Express** — servidor HTTP
+- **TypeScript**
+- **Docker** — contenedor con Chrome headless y tini para manejo de procesos

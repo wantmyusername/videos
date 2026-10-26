@@ -4,3 +4,9 @@ out
 out/
 .DS_Store
 dist
+.env
+.env.local
+.env.*.local
+shared/
+opencode.json
+build
