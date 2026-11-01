@@ -1,6 +1,7 @@
 import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { displayFont } from "./fonts";
+import { SAFE_BOTTOM, SAFE_LEFT, SAFE_RIGHT } from "./SafeZone";
 import type { FlightProps } from "./schema";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -20,9 +21,12 @@ const SecondaryStat: React.FC<{
   value: string;
   unit: string;
 }> = ({ label, value, unit }) => (
-  <div>
+  <div style={{ position: "relative", paddingTop: 18 }}>
     <div
       style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
         fontSize: 12,
         fontWeight: 700,
         letterSpacing: 2.4,
@@ -37,7 +41,6 @@ const SecondaryStat: React.FC<{
         display: "flex",
         alignItems: "baseline",
         gap: 5,
-        marginTop: 3,
         fontVariantNumeric: "tabular-nums",
         lineHeight: 1,
       }}
@@ -132,9 +135,11 @@ export const FlightTelemetry: React.FC<{
     <div
       style={{
         position: "absolute",
-        left: 54,
-        right: 54,
-        bottom: 310,
+        left: `${SAFE_LEFT}%`,
+        right: `${SAFE_RIGHT}%`,
+        bottom: `${SAFE_BOTTOM}%`,
+        display: "flex",
+        flexDirection: "column",
         fontFamily: displayFont,
         opacity,
         transform: `translateY(${translateY}px)`,
@@ -165,13 +170,75 @@ export const FlightTelemetry: React.FC<{
         {phase}
       </div>
 
+      <div style={{ marginTop: 10, marginBottom: 36 }}>
+        <div
+          style={{
+            position: "relative",
+            height: 4,
+            borderRadius: 999,
+            backgroundColor: "rgba(148, 163, 184, 0.28)",
+          }}
+        >
+          <div
+            style={{
+              width: `${clamp(progress, 0, 1) * 100}%`,
+              height: "100%",
+              borderRadius: 999,
+              background: "linear-gradient(90deg, #ff3d7f, #ffd23f)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: `${clamp(progress, 0, 1) * 100}%`,
+              top: -4,
+              width: 12,
+              height: 12,
+              borderRadius: 999,
+              backgroundColor: "#ffd23f",
+              boxShadow: "0 0 16px rgba(255, 210, 63, 0.95)",
+              transform: "translateX(-50%)",
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginTop: 8,
+            fontSize: 16,
+            fontWeight: 600,
+            letterSpacing: 1.2,
+            color: "#94a3b8",
+            textShadow: "0 3px 12px rgba(0,0,0,0.8)",
+          }}
+        >
+          <span>
+            <span style={{ color: "#f8fafc", fontWeight: 800 }}>
+              {originCode}
+            </span>
+            {flight.departure_time ? ` ${flight.departure_time}` : ""}
+          </span>
+          <span style={{ letterSpacing: 2, textTransform: "uppercase" }}>
+            {flight.flight_time_formatted ?? ""}
+          </span>
+          <span>
+            {flight.arrival_time ? `${flight.arrival_time} ` : ""}
+            <span style={{ color: "#f8fafc", fontWeight: 800 }}>
+              {destinationCode}
+            </span>
+          </span>
+        </div>
+      </div>
+
       <div
         style={{
           display: "flex",
-          alignItems: "flex-end",
+          alignItems: "baseline",
           justifyContent: "space-between",
           gap: 26,
-          marginTop: 6,
         }}
       >
         <div
@@ -212,8 +279,8 @@ export const FlightTelemetry: React.FC<{
         <div
           style={{
             display: "flex",
+            alignItems: "baseline",
             gap: 38,
-            paddingBottom: 4,
           }}
         >
           <SecondaryStat
@@ -229,68 +296,6 @@ export const FlightTelemetry: React.FC<{
             unit="KM"
           />
         </div>
-      </div>
-
-      <div
-        style={{
-          position: "relative",
-          height: 4,
-          marginTop: 24,
-          borderRadius: 999,
-          backgroundColor: "rgba(148, 163, 184, 0.28)",
-        }}
-      >
-        <div
-          style={{
-            width: `${clamp(progress, 0, 1) * 100}%`,
-            height: "100%",
-            borderRadius: 999,
-            background: "linear-gradient(90deg, #ff3d7f, #ffd23f)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: `${clamp(progress, 0, 1) * 100}%`,
-            top: -4,
-            width: 12,
-            height: 12,
-            borderRadius: 999,
-            backgroundColor: "#ffd23f",
-            boxShadow: "0 0 16px rgba(255, 210, 63, 0.95)",
-            transform: "translateX(-50%)",
-          }}
-        />
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginTop: 8,
-          fontSize: 16,
-          fontWeight: 600,
-          letterSpacing: 1.2,
-          color: "#94a3b8",
-          textShadow: "0 3px 12px rgba(0,0,0,0.8)",
-        }}
-      >
-        <span>
-          <span style={{ color: "#f8fafc", fontWeight: 800 }}>
-            {originCode}
-          </span>
-          {flight.departure_time ? ` ${flight.departure_time}` : ""}
-        </span>
-        <span style={{ letterSpacing: 2, textTransform: "uppercase" }}>
-          {flight.flight_time_formatted ?? ""}
-        </span>
-        <span>
-          {flight.arrival_time ? `${flight.arrival_time} ` : ""}
-          <span style={{ color: "#f8fafc", fontWeight: 800 }}>
-            {destinationCode}
-          </span>
-        </span>
       </div>
     </div>
   );

@@ -21,6 +21,12 @@ import { Subtitles } from "./Subtitles";
 import { FlightTelemetry } from "./Telemetry";
 import { FlightEndCard } from "./EndCard";
 import { haversineKm } from "./geo";
+import {
+  SAFE_LEFT,
+  SAFE_RIGHT,
+  SAFE_TOP,
+  SafeZoneDebug,
+} from "./SafeZone";
 import type { FlightProps } from "./schema";
 
 const { fontFamily } = loadFont("normal", {
@@ -81,7 +87,6 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
   );
   const hasNarration = Boolean(flight.audioUrl);
   const ambientVolume = hasNarration ? 0.2 : WHITE_NOISE_VOLUME;
-  const musicVolume = hasNarration ? 0.08 : 0.12;
   const whiteNoiseStartFrame = Math.round(
     fps * (flight.whiteNoiseStartSeconds ?? WHITE_NOISE_START_SECONDS_DEFAULT),
   );
@@ -128,12 +133,17 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
     easing: Easing.out(Easing.back(1.8)),
   });
 
-  const titleSize =
-    flight.title_overlay.length > 22
-      ? 54
-      : flight.title_overlay.length > 16
-        ? 62
-        : 72;
+  const safeContentWidth = width * (1 - (SAFE_LEFT + SAFE_RIGHT) / 100);
+  const titleSize = Math.max(
+    34,
+    Math.min(
+      72,
+      Math.floor(
+        (safeContentWidth / Math.max(1, flight.title_overlay.length) + 1) /
+          0.62,
+      ),
+    ),
+  );
 
   return (
     <AbsoluteFill
@@ -191,27 +201,6 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
       </Sequence>
 
       {flight.audioUrl ? <Audio src={flight.audioUrl} /> : null}
-      {flight.bgMusicUrl ? (
-        <Audio
-          src={flight.bgMusicUrl}
-          volume={(volumeFrame) =>
-            interpolate(
-              volumeFrame,
-              [
-                0,
-                Math.max(20, outroStartFrame - 20),
-                outroStartFrame,
-              ],
-              [musicVolume, musicVolume, 0],
-              {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-              },
-            )
-          }
-          loop
-        />
-      ) : null}
 
       <AbsoluteFill
         style={{
@@ -269,9 +258,9 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
       <div
         style={{
           position: "absolute",
-          top: 64,
-          left: 60,
-          right: 60,
+          top: `${SAFE_TOP}%`,
+          left: `${SAFE_LEFT}%`,
+          right: `${SAFE_RIGHT}%`,
           opacity: introProgress * (1 - endCardProgress),
           transform: `translateY(${interpolate(
             introProgress,
@@ -327,7 +316,7 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
           <p
             style={{
               margin: "18px 0 0",
-              maxWidth: 880,
+              maxWidth: "100%",
               fontSize: 32,
               fontWeight: 500,
               lineHeight: 1.3,
@@ -389,8 +378,8 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
         <div
           style={{
             position: "absolute",
-            top: 72,
-            right: 36,
+            top: `${SAFE_TOP}%`,
+            right: `${SAFE_RIGHT}%`,
             padding: "5px 9px",
             borderRadius: 7,
             backgroundColor: "rgba(2, 6, 23, 0.34)",
@@ -406,6 +395,8 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
       ) : null}
 
       <Subtitles words={flight.words} />
+
+      {flight.showSafeZone ? <SafeZoneDebug /> : null}
     </AbsoluteFill>
   );
 };

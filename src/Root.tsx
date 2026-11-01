@@ -48,6 +48,7 @@ const VB3005_PREVIEW_PROPS: FlightProps = {
   audioUrl:
     "https://appsengine.us/audios/20261026-083841_VB3005_Viajaen2h20mconVivaAerobus.wav",
   totalFrames: 1140,
+  showSafeZone: true,
   whiteNoiseStartSeconds: 2,
   mapStyle: "night",
   mapMode: "auto",

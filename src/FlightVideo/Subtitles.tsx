@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { SAFE_LEFT, SAFE_RIGHT } from "./SafeZone";
 
 type Word = {
   text: string;
@@ -86,8 +87,8 @@ export const Subtitles: React.FC<{
       <div
         style={{
           position: "absolute",
-          left: 0,
-          right: 0,
+          left: `${SAFE_LEFT}%`,
+          right: `${SAFE_RIGHT}%`,
           bottom: 580,
           display: "flex",
           justifyContent: "center",
@@ -95,7 +96,7 @@ export const Subtitles: React.FC<{
       >
         <div
           style={{
-            maxWidth: "88%",
+            maxWidth: "100%",
             textAlign: "center",
             fontSize: 42,
             lineHeight: 1.3,
@@ -126,8 +127,8 @@ export const Subtitles: React.FC<{
     <div
       style={{
         position: "absolute",
-        left: 0,
-        right: 0,
+        left: `${SAFE_LEFT}%`,
+        right: `${SAFE_RIGHT}%`,
         bottom: 560,
         display: "flex",
         justifyContent: "center",
@@ -136,7 +137,7 @@ export const Subtitles: React.FC<{
     >
       <div
         style={{
-          width: "92%",
+          width: "100%",
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "center",

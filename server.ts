@@ -440,7 +440,6 @@ app.post("/render", async (req, res) => {
   try {
     const inputProps = req.body ?? {};
     inputProps.audioUrl = normalizeAssetUrl(inputProps.audioUrl, req);
-    inputProps.bgMusicUrl = normalizeAssetUrl(inputProps.bgMusicUrl, req);
     inputProps.mapImageUrl = normalizeAssetUrl(inputProps.mapImageUrl, req);
 
     const compositionId = resolveCompositionId(inputProps);
