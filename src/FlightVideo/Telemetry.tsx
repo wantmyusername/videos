@@ -1,7 +1,11 @@
 import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { displayFont } from "./fonts";
-import { SAFE_BOTTOM, SAFE_LEFT, SAFE_RIGHT } from "./SafeZone";
+import {
+  SAFE_BOTTOM_INSET,
+  SAFE_LEFT,
+  SAFE_RIGHT_INSET,
+} from "./SafeZone";
 import type { FlightProps } from "./schema";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -75,14 +79,12 @@ export const FlightTelemetry: React.FC<{
   distanceKm: number;
   progress: number;
   taxiIn: number;
-  taxiOut: number;
   fadeOut?: number;
 }> = ({
   flight,
   distanceKm,
   progress,
   taxiIn,
-  taxiOut,
   fadeOut = 1,
 }) => {
   const frame = useCurrentFrame();
@@ -98,7 +100,7 @@ export const FlightTelemetry: React.FC<{
 
   const climb = smoothstep(0, 0.16, progress);
   const descent = smoothstep(0.84, 1, progress);
-  const onGround = taxiIn < 0.999 || taxiOut > 0.001;
+  const onGround = taxiIn < 0.999;
   const altitudeFt = onGround
     ? 0
     : Math.max(0, 36000 * (climb - descent));
@@ -136,10 +138,11 @@ export const FlightTelemetry: React.FC<{
       style={{
         position: "absolute",
         left: `${SAFE_LEFT}%`,
-        right: `${SAFE_RIGHT}%`,
-        bottom: `${SAFE_BOTTOM}%`,
+        right: `${SAFE_RIGHT_INSET}%`,
+        bottom: `${SAFE_BOTTOM_INSET}%`,
         display: "flex",
         flexDirection: "column",
+        width: "auto",
         fontFamily: displayFont,
         opacity,
         transform: `translateY(${translateY}px)`,
@@ -207,6 +210,8 @@ export const FlightTelemetry: React.FC<{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "baseline",
+            gap: 12,
+            whiteSpace: "nowrap",
             marginTop: 8,
             fontSize: 16,
             fontWeight: 600,
@@ -238,7 +243,8 @@ export const FlightTelemetry: React.FC<{
           display: "flex",
           alignItems: "baseline",
           justifyContent: "space-between",
-          gap: 26,
+          gap: 12,
+          whiteSpace: "nowrap",
         }}
       >
         <div
@@ -246,13 +252,13 @@ export const FlightTelemetry: React.FC<{
             display: "flex",
             alignItems: "baseline",
             gap: 10,
-            minWidth: 300,
+            flexShrink: 0,
             whiteSpace: "nowrap",
           }}
         >
           <span
             style={{
-              fontSize: 96,
+              fontSize: 84,
               fontWeight: 800,
               lineHeight: 0.82,
               letterSpacing: -5,
@@ -280,7 +286,8 @@ export const FlightTelemetry: React.FC<{
           style={{
             display: "flex",
             alignItems: "baseline",
-            gap: 38,
+            gap: 44,
+            flexShrink: 0,
           }}
         >
           <SecondaryStat

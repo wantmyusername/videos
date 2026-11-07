@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const placeSchema = z.object({
+const placeSchema = z.object({
   city: z.string(),
   country: z.string().optional(),
   iata: z.string().optional(),
@@ -8,7 +8,7 @@ export const placeSchema = z.object({
   lng: z.number().min(-180).max(180),
 });
 
-export const wordSchema = z.object({
+const wordSchema = z.object({
   word: z.string().optional(),
   text: z.string().optional(),
   start: z.number(),

@@ -23,8 +23,9 @@ import { FlightEndCard } from "./EndCard";
 import { haversineKm } from "./geo";
 import {
   SAFE_LEFT,
-  SAFE_RIGHT,
+  SAFE_RIGHT_INSET,
   SAFE_TOP,
+  SAFE_WIDTH,
   SafeZoneDebug,
 } from "./SafeZone";
 import type { FlightProps } from "./schema";
@@ -46,6 +47,42 @@ const formatDistance = (value?: number) =>
   value === undefined
     ? null
     : `${new Intl.NumberFormat("es-ES").format(Math.round(value))} km`;
+
+const TITLE_CHAR_WIDTH = 0.7;
+
+const splitTitleLines = (text: string): [string, string] => {
+  const trimmed = text.trim();
+  const dashParts = trimmed.split(/\s+[-–—]\s+/);
+
+  if (dashParts.length === 2) {
+    return [`${dashParts[0]} -`, dashParts[1]];
+  }
+
+  const words = trimmed.split(/\s+/).filter(Boolean);
+
+  if (words.length < 2) {
+    return [trimmed, ""];
+  }
+
+  let bestIndex = 1;
+  let bestDiff = Number.POSITIVE_INFINITY;
+
+  for (let index = 1; index < words.length; index++) {
+    const first = words.slice(0, index).join(" ");
+    const second = words.slice(index).join(" ");
+    const diff = Math.abs(first.length - second.length);
+
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIndex = index;
+    }
+  }
+
+  return [
+    words.slice(0, bestIndex).join(" "),
+    words.slice(bestIndex).join(" "),
+  ];
+};
 
 export const FlightVideo: React.FC<FlightProps> = (flight) => {
   const frame = useCurrentFrame();
@@ -116,7 +153,6 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
         extrapolateRight: "clamp",
       })
     : 1;
-  const taxiOutProgress = 0;
 
   const distanceReveal = interpolate(frame, [0, 45], [0, 1], {
     extrapolateLeft: "clamp",
@@ -133,17 +169,30 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
     easing: Easing.out(Easing.back(1.8)),
   });
 
-  const safeContentWidth = width * (1 - (SAFE_LEFT + SAFE_RIGHT) / 100);
-  const titleSize = Math.max(
-    34,
-    Math.min(
-      72,
-      Math.floor(
-        (safeContentWidth / Math.max(1, flight.title_overlay.length) + 1) /
-          0.62,
-      ),
-    ),
+  const safeContentWidth = width * (SAFE_WIDTH / 100);
+  const titleLength = Math.max(1, flight.title_overlay.length);
+  const oneLineTitleSize = Math.floor(
+    safeContentWidth / (titleLength * TITLE_CHAR_WIDTH),
   );
+  const canWrapTitle =
+    oneLineTitleSize < 48 &&
+    flight.title_overlay.trim().split(/\s+/).filter(Boolean).length > 1;
+  const titleLines = canWrapTitle
+    ? splitTitleLines(flight.title_overlay)
+    : ([flight.title_overlay, ""] as const);
+  const longestTitleLine = Math.max(
+    1,
+    ...titleLines.map((line) => line.length),
+  );
+  const titleSize = canWrapTitle
+    ? Math.max(
+        30,
+        Math.min(
+          64,
+          Math.floor(safeContentWidth / (longestTitleLine * TITLE_CHAR_WIDTH)),
+        ),
+      )
+    : Math.max(40, Math.min(72, oneLineTitleSize));
 
   return (
     <AbsoluteFill
@@ -260,7 +309,7 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
           position: "absolute",
           top: `${SAFE_TOP}%`,
           left: `${SAFE_LEFT}%`,
-          right: `${SAFE_RIGHT}%`,
+          right: `${SAFE_RIGHT_INSET}%`,
           opacity: introProgress * (1 - endCardProgress),
           transform: `translateY(${interpolate(
             introProgress,
@@ -269,7 +318,15 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
           )}px)`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 18,
+            maxWidth: "100%",
+          }}
+        >
           <div
             style={{
               padding: "10px 20px",
@@ -302,14 +359,26 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
         <h1
           style={{
             margin: "26px 0 0",
+            maxWidth: "100%",
             fontSize: titleSize,
             fontWeight: 900,
             lineHeight: 1.02,
             letterSpacing: -1,
+            overflowWrap: "break-word",
             textShadow: "0 6px 30px rgba(0,0,0,0.8)",
           }}
         >
-          {flight.title_overlay}
+          {(canWrapTitle ? titleLines : [flight.title_overlay]).map(
+            (line, index) =>
+              line ? (
+                <span
+                  key={`${line}-${index}`}
+                  style={{ display: "block" }}
+                >
+                  {line}
+                </span>
+              ) : null,
+          )}
         </h1>
 
         {flight.subtitle_overlay ? (
@@ -364,7 +433,6 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
         distanceKm={distanceKm}
         progress={routeProgress}
         taxiIn={taxiInProgress}
-        taxiOut={taxiOutProgress}
         fadeOut={1 - endCardProgress}
       />
 
@@ -379,7 +447,7 @@ export const FlightVideo: React.FC<FlightProps> = (flight) => {
           style={{
             position: "absolute",
             top: `${SAFE_TOP}%`,
-            right: `${SAFE_RIGHT}%`,
+            right: `${SAFE_RIGHT_INSET}%`,
             padding: "5px 9px",
             borderRadius: 7,
             backgroundColor: "rgba(2, 6, 23, 0.34)",

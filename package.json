@@ -13,8 +13,6 @@
     "@remotion/google-fonts": "^4.0.395",
     "@remotion/renderer": "^4.0.395",
     "@remotion/three": "^4.0.395",
-    "@remotion/zod-types": "4.0.395",
-    "body-parser": "^2.2.1",
     "dotenv": "^18.0.9",
     "express": "^5.2.1",
     "react": "19.2.3",

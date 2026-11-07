@@ -1,19 +1,27 @@
 import React from "react";
 
-export const SAFE_LEFT = 4;
-export const SAFE_RIGHT = 18;
-export const SAFE_TOP = 6.5;
-export const SAFE_BOTTOM = 18;
+// Límites de la zona segura, en porcentaje del video completo.
+// SAFE_RIGHT y SAFE_BOTTOM son coordenadas absolutas (borde derecho e
+// inferior), NO márgenes desde el borde.
+export const SAFE_LEFT = 12; // el contenido no empieza antes del 12% del ancho
+export const SAFE_RIGHT = 78; // el contenido no pasa del 78% del ancho
+export const SAFE_TOP = 14; // el contenido no empieza antes del 14% del alto
+export const SAFE_BOTTOM = 75; // el contenido no pasa del 75% del alto
 
-export const SAFE_WIDTH = 100 - SAFE_LEFT - SAFE_RIGHT;
-export const SAFE_HEIGHT = 100 - SAFE_TOP - SAFE_BOTTOM;
+// Ancho y alto útiles de la zona segura.
+export const SAFE_WIDTH = SAFE_RIGHT - SAFE_LEFT;
+export const SAFE_HEIGHT = SAFE_BOTTOM - SAFE_TOP;
 
-export const safeZoneStyle: React.CSSProperties = {
+// Distancias desde los bordes derecho e inferior, para usar con right/bottom.
+export const SAFE_RIGHT_INSET = 100 - SAFE_RIGHT;
+export const SAFE_BOTTOM_INSET = 100 - SAFE_BOTTOM;
+
+const safeZoneStyle: React.CSSProperties = {
   position: "absolute",
   left: `${SAFE_LEFT}%`,
-  right: `${SAFE_RIGHT}%`,
   top: `${SAFE_TOP}%`,
-  bottom: `${SAFE_BOTTOM}%`,
+  width: `${SAFE_WIDTH}%`,
+  height: `${SAFE_HEIGHT}%`,
 };
 
 export const SafeZoneDebug: React.FC = () => (
